@@ -100,8 +100,8 @@ UIManager *UIManager::s_instance = nullptr;
 
 Button::Button(const string & id, vec2 position, int width, int height) : View(id, position, width, height)
 {
-		m_state = ButtonState::Normal;
-		m_buttonDrawer = new ButtonDrawer(this);
+	m_state = ButtonState::Normal;
+	m_btnDrawer = ButtonDrawer::Create(this);
 }
 
 bool Button::DispatchEvent(Event & ievent)

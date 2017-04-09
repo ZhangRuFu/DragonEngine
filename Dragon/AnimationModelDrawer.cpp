@@ -24,6 +24,13 @@ void AnimationModelDrawer::PublicSet()
 	m_shader->SetUniformValue("projection", projection);
 }
 
+AnimationModelDrawer * AnimationModelDrawer::Create(Model * model, Transform * transform)
+{
+	AnimationModelDrawer *drawer = new AnimationModelDrawer(model, transform);
+	drawer->Register();
+	return drawer;
+}
+
 GraphicsBuffer * AnimationModelDrawer::LoadGraphicsBuffer(SkeletonModel * model)
 {
 	if (m_buffersMap.find(model) != m_buffersMap.end())

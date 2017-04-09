@@ -20,7 +20,7 @@ public:
 	Soldier(void)
 	{
 		m_mesh = MeshManager::LoadModel("E:\\GameDevelop\\Model\\nanosuit\\nanosuit.obj");
-		m_drawer = new ModelDrawer(m_mesh, &m_transform);
+		m_drawer = ModelDrawer::Create(m_mesh, &m_transform);
 	}
 
 	void Move()

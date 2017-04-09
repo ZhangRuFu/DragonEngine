@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "CommonType.h"
 
 using std::string;
 
@@ -21,9 +22,11 @@ protected:
 
 public:
 	Drawer(string shaderName);
-
+	Shader* GetShader();
 	virtual void Draw() = 0;
 	virtual void PublicSet() = 0;
+	virtual RenderLevel GetRenderLevel() = 0;
 
-	Shader* GetShader();
+protected:
+	void Register(void);
 };

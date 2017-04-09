@@ -4,12 +4,7 @@
 #include "RenderSystem.h"
 #include "Tiny2D.h"
 
-UIDrawer::UIDrawer(void)
-{
-	if(m_drawer == nullptr)
-		m_drawer = Tiny2D::GetInstance();
-	RenderSystem::RegisterDrawer(this);
-}
+UIDrawer::UIDrawer(void) {}
 
 ButtonDrawer::ButtonDrawer(const Button *button)
 {
@@ -30,7 +25,14 @@ void ButtonDrawer::Draw()
 		color += offset;
 	else if (buttonState == ButtonState::Clicked)
 		color -= offset;
-	m_drawer->DrawRect(position, dimension.x, dimension.y, color);
+	DrawRect(position, dimension.x, dimension.y, color);
+}
+
+ButtonDrawer * ButtonDrawer::Create(const Button * button)
+{
+	ButtonDrawer *drawer = new ButtonDrawer(button);
+	drawer->Register();
+	return drawer;
 }
 
 TextViewDrawer::TextViewDrawer(const TextView * texView)
@@ -38,10 +40,14 @@ TextViewDrawer::TextViewDrawer(const TextView * texView)
 	m_texView = texView;
 }
 
-void TextViewDrawer::Draw(void)
+TextViewDrawer * TextViewDrawer::Create(const TextView * texView)
 {
-	m_drawer->DrawFont(m_texView->GetText(), m_texView->GetAbsolutePosition(), vec3(1.0f, 1.0f, 1.0f));
+	TextViewDrawer *drawer = new TextViewDrawer(texView);
+	drawer->Register();
+	return drawer;
 }
 
-
-Tiny2D *UIDrawer::m_drawer = nullptr;
+void TextViewDrawer::Draw(void)
+{
+	DrawText(m_texView->GetText(), m_texView->GetAbsolutePosition(), vec3(1.0f, 1.0f, 1.0f));
+}

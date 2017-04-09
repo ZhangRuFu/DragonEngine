@@ -16,15 +16,20 @@ private:
 	Transform *m_transform;
 
 	static map<SkeletonModel*, GraphicsBuffer*> m_buffersMap;
-public:
+
+protected:
 	AnimationModelDrawer(Model *model, Transform *transform, string shaderName = "AnimationModel") : Drawer(shaderName)
 	{
 		m_model = dynamic_cast<SkeletonModel*>(model);
 		m_transform = transform;
 		m_buffers = LoadGraphicsBuffer(m_model);
 	}
+
+public:
 	virtual void Draw(void);
 	virtual void PublicSet(void);
+	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::Entity; }
 
+	static AnimationModelDrawer* Create(Model *model, Transform *transform);
 	static GraphicsBuffer* LoadGraphicsBuffer(SkeletonModel *model);
 };

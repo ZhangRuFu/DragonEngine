@@ -237,13 +237,10 @@
       <Filter>头文件\Render\Drawer</Filter>
     </ClInclude>
     <ClInclude Include="Tiny2D.h">
-      <Filter>头文件\Render</Filter>
+      <Filter>头文件\Render\Drawer</Filter>
     </ClInclude>
     <ClInclude Include="FreeType.h">
-      <Filter>头文件\Render</Filter>
+      <Filter>头文件\Render\Drawer</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

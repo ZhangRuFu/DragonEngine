@@ -43,6 +43,13 @@ void SimpleModelDrawer::PublicSet()
 	m_shader->SetUniformValue("projection", projection);
 }
 
+SimpleModelDrawer * SimpleModelDrawer::Create(Model * mesh, Transform * transform, vec3 color)
+{
+	SimpleModelDrawer *drawer = new SimpleModelDrawer(mesh, transform, color);
+	drawer->Register();
+	return drawer;
+}
+
 GraphicsBuffer * SimpleModelDrawer::LoadGraphicsBuffer(StaticModel *mesh)
 {
 	if (m_buffersMap.find(mesh) != m_buffersMap.end())

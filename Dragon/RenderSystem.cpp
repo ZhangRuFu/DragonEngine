@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <stdarg.h>
 #include "RenderSystem.h"
 #include "Shader.h"
 #include "Tiny2D.h"
@@ -12,7 +12,7 @@
 using std::cout;
 using std::endl;
 
-RenderSystem::RenderSystem(int frameWidth, int frameHeight) : m_uiRenderList(nullptr)
+RenderSystem::RenderSystem(int frameWidth, int frameHeight)
 {
 	m_frameWidth = frameWidth;
 	m_frameHeight = frameHeight;
@@ -28,7 +28,6 @@ RenderSystem* RenderSystem::GetInstance(int frameWidth, int frameHeight)
 	if (m_instance == nullptr)
 		m_instance = new RenderSystem(frameWidth, frameHeight);
 	return m_instance;
-
 }
 
 bool RenderSystem::Init()
@@ -53,16 +52,14 @@ bool RenderSystem::Init()
 	glEnable(GL_DEPTH_TEST);
 
 	//加载必要Shader=========================改成XML加载====================================
-	AddRenderList(CreateShader("E:\\OpenGL\\Shader\\Assimp\\", "AssimpModel"), RenderType::Entity);
-	AddRenderList(CreateShader("E:\\OpenGL\\Shader\\ModelRender\\PureColor\\", "SimpleModel"), RenderType::Entity);
-	AddRenderList(CreateShader("E:\\OpenGL\\Shader\\ModelRender\\Animation\\", "AnimationModel"), RenderType::Entity);
-	
-	//Tiny2D Shader
-	AddRenderList(CreateShader("E:\\OpenGL\\Shader\\2D\\", "2D"), RenderType::UI);
+	CreateShader("E:\\OpenGL\\Shader\\Assimp\\", "AssimpModel");
+	CreateShader("E:\\OpenGL\\Shader\\ModelRender\\PureColor\\", "SimpleModel");
+	CreateShader("E:\\OpenGL\\Shader\\ModelRender\\Animation\\", "AnimationModel");
+	CreateShader("E:\\OpenGL\\Shader\\2D\\", "2D");
+	CreateShader("E:\\OpenGL\\Shader\\Font\\", "font");
 
-	//Tiny2D初始化
-	FontRender::Init(m_frameWidth, m_frameHeight, CreateShader("E:\\OpenGL\\Shader\\Font\\", "font"));
-	Tiny2D::Init(m_frameWidth, m_frameHeight, m_uiRenderList.m_shader);
+	//预留UI绘制项
+	m_renderList.push_back(DrawerList(-1));
 	return true;
 }
 
@@ -71,7 +68,9 @@ void RenderSystem::Draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (unsigned int i = 0; i < m_renderList.size(); i++)
 	{
-		Shader *shader = m_renderList[i].m_shader;
+		if (m_renderList[i].m_shaderIndex == -1)
+			continue;
+		Shader *shader = m_shaders[m_renderList[i].m_shaderIndex];
 		shader->Use();
 		list<Drawer*> &drawerList = m_renderList[i].m_drawerList;
 		for (list<Drawer*>::iterator iterator = drawerList.begin(); iterator != drawerList.end(); iterator++)
@@ -82,11 +81,6 @@ void RenderSystem::Draw()
 			(*iterator)->Draw();
 		}
 	}
-
-	//UI绘制
-	m_uiRenderList.m_shader->Use();
-	for (list<UIDrawer*>::const_iterator i = m_uiRenderList.m_drawerList.begin(); i != m_uiRenderList.m_drawerList.end(); i++)
-		(*i)->Draw();
 }
 
 void RenderSystem::ReSize(int frameWidth, int frameHeight)
@@ -95,7 +89,7 @@ void RenderSystem::ReSize(int frameWidth, int frameHeight)
 	glViewport(0, 0, m_frameWidth, m_frameHeight);
 }
 
-void RenderSystem::Register(Drawer *drawer)
+void RenderSystem::_Register(Drawer *drawer)
 {
 	if (drawer == nullptr)
 	{
@@ -104,23 +98,34 @@ void RenderSystem::Register(Drawer *drawer)
 	}
 	string shaderName = drawer->GetShader()->GetShaderName();
 
-	if (m_shaderMap.find(shaderName) == m_shaderMap.end())
-	{
-		cout << "DragonEngine->ERROR:RenderSystem::Register, 未知Shader" << shaderName << endl;
-		return;
-	}
+	//Shader一定存在
 	unsigned int index = m_shaderMap[shaderName];
-	m_renderList[index].m_drawerList.push_back(drawer);
+
+	//找到shader对应的DrawList
+	for (int i = 0; i < m_renderList.size(); i++)
+		if (m_renderList[i].m_shaderIndex == index)
+		{
+			m_renderList[i].m_drawerList.push_back(drawer);
+			return;
+		}
+
+	//建立绘制项
+
+	vector<DrawerList>::iterator newPos;
+	if (drawer->GetRenderLevel() == RenderLevel::UI)
+	{
+		newPos = --m_renderList.end();
+		(*newPos).m_shaderIndex = index;
+	}
+	else
+		newPos = m_renderList.insert(--m_renderList.end(), DrawerList(index));
+	(*newPos).m_drawerList.push_back(drawer);
+
 }
 
-void RenderSystem::Register(UIDrawer * drawer)
+void RenderSystem::Register(Drawer *drawer)
 {
-	if (drawer == nullptr)
-	{
-		cout << "DragonEngine->ERROR:RenderSystem::Register, 待注册的Drawer为null" << endl;
-		return;
-	}
-	m_uiRenderList.m_drawerList.push_back(drawer);
+	m_instance->_Register(drawer);
 }
 
 unsigned int RenderSystem::CreateTexture(TextureInfo &info)
@@ -161,21 +166,9 @@ unsigned int RenderSystem::CreateCubeTexture(vector<TextureInfo> *info)
 Shader* RenderSystem::LoadShader(string shaderName)
 {
 	if (m_instance->m_shaderMap.find(shaderName) != m_instance->m_shaderMap.end())
-		return m_instance->m_renderList[m_instance->m_shaderMap[shaderName]].m_shader;
-	if (m_instance->m_uiRenderList.m_shader->GetShaderName() == shaderName)
-		return m_instance->m_uiRenderList.m_shader;
-	cout << "DragonEngine->ERROR:RenderSystem::LoadShader:未知的着色器\n";
+		return m_instance->m_shaders[m_instance->m_shaderMap[shaderName]];
+	cout << "DragonEngine->ERROR:RenderSystem::LoadShader:未知的着色器<" << shaderName << ">\n";
 	return nullptr;
-}
-
-void RenderSystem::RegisterDrawer(Drawer * drawer)
-{
-	m_instance->Register(drawer);
-}
-
-void RenderSystem::RegisterDrawer(UIDrawer * uiDrawer)
-{
-	m_instance->Register(uiDrawer);
 }
 
 Shader* RenderSystem::CreateShader(string shaderPath, string shaderName)
@@ -192,26 +185,11 @@ Shader* RenderSystem::CreateShader(string shaderPath, string shaderName)
 	Validate(shaderID);
 	Shader *shader = new Shader(shaderID, shaderName);
 
-	return shader;
-}
-
-void RenderSystem::AddRenderList(Shader * shader, RenderType type)
-{
 	//注册Shader
-	string shaderName = shader->GetShaderName();
-	switch (type)
-	{
-	case RenderSystem::Entity:
-		m_shaderMap[shaderName] = m_renderList.size();
-		m_renderList.push_back(DrawerList<Drawer>(shader));
-		break;
-	case RenderSystem::UI:
-		m_uiRenderList.m_shader = shader;
-		break;
-	default:
-		return;
-	}
+	m_shaderMap[shaderName] = m_shaders.size();
+	m_shaders.push_back(shader);
 	cout << "DragonEngine->SUCCESS:已加载[" << shaderName << "]着色器\n";
+	return shader;
 }
 
 int RenderSystem::LoadShaderSource(string fileName, char ** source)
@@ -271,6 +249,9 @@ void RenderSystem::Validate(GLenum shaderID)
 	glValidateProgram(shaderID);
 }
 
-template<typename T> DrawerList<T>::DrawerList(Shader * shader) : m_shader(shader){ }
-
 RenderSystem * RenderSystem::m_instance = nullptr;
+
+DrawerList::DrawerList(int shaderIndex)
+{
+	m_shaderIndex = shaderIndex;
+}

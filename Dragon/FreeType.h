@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <GLM\glm.hpp>
+#include "Drawer.h"
 
 
 using std::exception;
@@ -30,35 +31,22 @@ struct Character
 };
 
 //字体渲染器，由RenderSystem管理，与渲染系统相关
-class FontRender
+class FontRender : public Drawer
 {
 private:
-	Shader *m_fontShader;
-	mat4 m_windowProjection;
 	vector<Character> m_charSet;
 
-	GLenum m_fontVBO;
-	GLenum m_fontVAO;
-	static FontRender *m_instance;
-
 public:
-	static FontRender* GetInstance(void)
-	{
-		if (m_instance == nullptr)
-			throw exception("ERROR:FontRender未建立实例!");
-		return m_instance;
-	}
-	static void Init(int windowW, int windowH, Shader *shader)
-	{
-		if (m_instance == nullptr)
-			m_instance = new FontRender(windowW, windowH, shader);
-	}
-	void ModifyWindow(int windowWidth, int windowHeight);
+	FontRender(string shaderName = "font");
 	void DrawText(const string &str, vec2 position, vec3 color);
+	virtual void Draw(void) = 0;
+	virtual void PublicSet(void);
+	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::NonRender; }
 
 private:
-	FontRender(int windowWidth, int windowHeight, Shader *shader);
 	void Init(void);
+	
+	static GraphicsBuffer *m_graphicBuffer;
 };
 
 

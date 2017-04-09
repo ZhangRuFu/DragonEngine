@@ -24,18 +24,19 @@ private:
 
 	static map<StaticModel*, GraphicsBuffer*> m_buffersMap;
 
-public:
+protected:
 	ModelDrawer(Model *mesh, Transform *transform, string shaderName = "AssimpModel") : Drawer(shaderName)
 	{
 		m_mesh = dynamic_cast<StaticModel*>(mesh);
 		m_transform = transform;
 		m_buffers = LoadGraphicsBuffer(m_mesh);
-		
 	}
 
 public:
 	virtual void Draw();
 	virtual void PublicSet();
+	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::Entity; }
 
+	static ModelDrawer* Create(Model *mesh, Transform *transform);
 	static GraphicsBuffer* LoadGraphicsBuffer(StaticModel *mesh);		//避免重复给相同Model开辟缓冲对象
 };

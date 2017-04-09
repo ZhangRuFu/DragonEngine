@@ -22,6 +22,9 @@ private:
 	float m_yaw;	//从x正向开始
 	float m_pitch;	//从y正向到y负向
 
+	int m_windowWidth;
+	int m_windowHeight;
+
 public:
 	Camera(Transform transform = Transform(vec3(0, 0, 10)), vec3 front = vec3(0, 0, -1), vec3 up = vec3(0, 1, 0));
 
@@ -38,6 +41,7 @@ public:
 
 	mat4 GenViewMatrix();
 	mat4 GenProjectionMatrix();
+	mat4 GenWindowProjectionMatrix();
 
 public:
 

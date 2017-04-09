@@ -5,7 +5,7 @@
 using std::vector;
 
 enum BasicMesh {CUBE, PLANE, COUNT};
-
+enum RenderLevel { Entity, UI, NonRender };
 
 class TextureInfo
 {

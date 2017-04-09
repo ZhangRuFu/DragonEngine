@@ -25,6 +25,11 @@ void WindowSystem::AssignInput(InputSystem * input)
 	m_input = input;
 }
 
+void WindowSystem::GetWindowSize(int &frameWidth, int &frameHeight)
+{
+	m_instance->GetFrameSize(frameWidth, frameHeight);
+}
+
 void WindowSystem::Render()
 {
 	
@@ -63,11 +68,9 @@ void WindowSystem::InitUI(void)
 {
 	m_uiManager = new UIManager(m_frameWidth, m_frameHeight);
 	Button *button = new Button("btnTest", vec2(50, 50), 50, 50);
-	ButtonDrawer *btnDrawer = new ButtonDrawer(button);
 	MouseListener *i = new iMouseListener();
 	button->SetMouseListener(i);
 	Button *button2 = new Button("btnTest2", vec2(150, 150), 100, 50);
-	ButtonDrawer *btnDrawer2 = new ButtonDrawer(button2);
 	button2->SetMouseListener(i);
 	//TextView *tv = new TextView("TextView", vec2(100, 100), ;
 	m_uiManager->AddView(*button);

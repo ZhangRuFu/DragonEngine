@@ -6,7 +6,7 @@
 Light::Light(Transform &transform, vec3 color) : m_color(color), GameSpirit(transform)
 {
 	m_mesh = MeshManager::LoadModel(BasicMesh::CUBE);
-	m_drawer = new SimpleModelDrawer(m_mesh, &m_transform, m_color);
+	m_drawer = SimpleModelDrawer::Create(m_mesh, &m_transform, m_color);
 	m_isShow = true;
 	ResourceSystem::Register(this);
 }
