@@ -1,6 +1,7 @@
 #pragma once
 #include "CommonType.h"
 #include "Shader.h"
+#include "Tiny2D.h"
 #include <GLM\glm.hpp>
 
 class View;
@@ -23,15 +24,13 @@ class Tiny2D;
 *
 */
 
-class UIDrawer
+class UIDrawer : public Tiny2D
 {
-protected:
-	static Tiny2D *m_drawer;
-
 public:
 	UIDrawer(void);
 
 	virtual void Draw() = 0;
+	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::UI; }
 };
 
 /*
@@ -45,11 +44,12 @@ class ButtonDrawer : public UIDrawer
 {
 protected:
 	const Button *m_button;
-
-public:
 	ButtonDrawer(const Button *button);
 
+public:
+
 	virtual void Draw(void);
+	static ButtonDrawer* Create(const Button *button);
 };
 
 /*
@@ -63,9 +63,9 @@ class TextViewDrawer : public UIDrawer
 {
 protected:
 	const TextView *m_texView;
-
-public:
 	TextViewDrawer(const TextView *texView);
 
+public:
+	static TextViewDrawer* Create(const TextView *texView);
 	virtual void Draw(void);
 };

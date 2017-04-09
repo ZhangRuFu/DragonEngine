@@ -22,7 +22,7 @@ private:
 private:
 	static map<StaticModel*, GraphicsBuffer*> m_buffersMap;
 
-public:
+protected:
 	SimpleModelDrawer(Model *mesh, Transform *transform, vec3 color, string shaderName = "SimpleModel") : Drawer(shaderName)
 	{
 		m_mesh = dynamic_cast<StaticModel*>(mesh);
@@ -32,11 +32,10 @@ public:
 	}
 
 public:
-	void Draw();
+	virtual void Draw();
+	virtual void PublicSet();
+	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::Entity; }
 
-public:
-	void PublicSet();
-
-public:
+	static SimpleModelDrawer* Create(Model *mesh, Transform *transform, vec3 color);
 	static GraphicsBuffer* LoadGraphicsBuffer(StaticModel *mesh);
 };

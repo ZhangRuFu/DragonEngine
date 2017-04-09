@@ -21,7 +21,7 @@ public:
 	Monster(void)
 	{
 		m_model = MeshManager::LoadModel("E:\\GameDevelop\\Model\\Monster_Animation\\monster.FBX");
-		m_drawer = new AnimationModelDrawer(m_model, &m_transform);
+		m_drawer = AnimationModelDrawer::Create(m_model, &m_transform);
 	}
 
 	void Move()

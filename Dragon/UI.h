@@ -156,7 +156,8 @@ class Button : public View
 {
 private:
 	ButtonState m_state;
-	ButtonDrawer *m_buttonDrawer;
+	ButtonDrawer *m_btnDrawer;
+
 public:
 	Button(const string &id, vec2 position, int width, int height);
 	ButtonState GetButtonState(void) const { return m_state; }

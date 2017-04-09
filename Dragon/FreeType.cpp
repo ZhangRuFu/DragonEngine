@@ -1,39 +1,40 @@
 #include <exception>
 #include "FreeType.h"
 #include "RenderSystem.h"
-
+#include "ResourceSystem.h"
 
 using std::exception;
 
 #pragma comment(lib, "freetype271.lib")
 
-FontRender::FontRender(int windowWidth, int windowHeight, Shader *shader) : m_fontVBO(-1), m_fontVAO(-1)
+FontRender::FontRender(string shaderName) : Drawer(shaderName)
 {
-	m_windowProjection = ortho<float>(0, windowWidth, -windowHeight, 0);
-	m_fontShader = shader;
+	if (m_graphicBuffer == nullptr)
+		Init();
+	m_buffers = m_graphicBuffer;
+	
+	Init();
+}
 
-	//Drawer
-	glGenVertexArrays(1, &m_fontVAO);
-	glGenBuffers(1, &m_fontVBO);
-	glBindVertexArray(m_fontVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, m_fontVBO);
+void FontRender::Init(void)
+{
+	m_graphicBuffer = new GraphicsBuffer();
+	unsigned int fontVAO = -1;
+	unsigned int fontVBO = -1;
+	glGenVertexArrays(1, &fontVAO);
+	glGenBuffers(1, &fontVBO);
+	m_graphicBuffer->m_vbo.push_back(fontVBO);
+	m_graphicBuffer->m_vao.push_back(fontVAO);
+
+	glBindVertexArray(fontVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
 	glBufferData(GL_ARRAY_BUFFER, 6 * 4 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	Init();
-	m_instance = this;
-}
-
-void FontRender::ModifyWindow(int windowWidth, int windowHeight)
-{
-	m_windowProjection = ortho<float>(0, windowWidth, 0, windowHeight);
-}
-
-void FontRender::Init(void)
-{
+	//加载字体
 	vector<const unsigned char*> buffer;
 	FreeType freetype("E:\\arial.ttf", 16);
 	freetype.GetCharacters(m_charSet, buffer);
@@ -61,11 +62,9 @@ void FontRender::DrawText(const string &str, vec2 position, vec3 color)
 	glGetIntegerv(GL_CURRENT_PROGRAM, &preShader);
 	if (preShader == -1)
 		throw exception("获取Shader失败!");
-	m_fontShader->Use();
-	glUniformMatrix4fv(m_fontShader->GetUniformLocation("projection"), 1, GL_FALSE, value_ptr(m_windowProjection));
-	glUniform3fv(m_fontShader->GetUniformLocation("textColor"), 1, value_ptr(color));
+	glUniform3fv(m_shader->GetUniformLocation("textColor"), 1, value_ptr(color));
 	glActiveTexture(GL_TEXTURE0);
-	glBindVertexArray(m_fontVAO);
+	glBindVertexArray(m_buffers->m_vao[0]);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	for (string::const_iterator iterater = str.begin(); iterater != str.end(); iterater++)
@@ -83,7 +82,7 @@ void FontRender::DrawText(const string &str, vec2 position, vec3 color)
 		};
 
 		glBindTexture(GL_TEXTURE_2D, ch.m_texID);
-		glBindBuffer(GL_ARRAY_BUFFER, m_fontVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_buffers->m_vbo[0]);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -95,6 +94,12 @@ void FontRender::DrawText(const string &str, vec2 position, vec3 color)
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_BLEND);
 	glUseProgram(preShader);
+}
+
+void FontRender::PublicSet(void)
+{
+	mat4 windowProjection = ResourceSystem::GetMainCamera()->GenWindowProjectionMatrix();
+	m_shader->SetUniformValue("projection", windowProjection);
 }
 
 
@@ -143,4 +148,5 @@ void FreeType::GetCharacters(vector<Character> &charSet, vector<const unsigned c
 	}
 }
 
-FontRender *FontRender::m_instance;
+
+GraphicsBuffer *FontRender::m_graphicBuffer = nullptr;

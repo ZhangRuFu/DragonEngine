@@ -70,6 +70,7 @@ public:
 	void GetFrameSize(int &frameWidth, int &frameHeight);
 	void AssignEngine(DragonEngine *engine);
 	void AssignInput(InputSystem *input);
+	static void GetWindowSize(int &frameWidth, int &frameHeight);
 
 public:
 	virtual void Render() = 0;

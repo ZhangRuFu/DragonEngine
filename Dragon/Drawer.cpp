@@ -4,7 +4,11 @@
 Drawer::Drawer(string shaderName)
 {
 	m_shader = RenderSystem::LoadShader(shaderName);
-	RenderSystem::RegisterDrawer(this);
+}
+
+void Drawer::Register(void)
+{
+	RenderSystem::Register(this);
 }
 
 Shader * Drawer::GetShader()

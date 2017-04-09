@@ -15,6 +15,6 @@ public:
 	{
 		m_model = MeshManager::LoadModel(BasicMesh::PLANE);
 		m_model->AddTexture("E:\\GameDevelop\\Asset\\Texture\\wood2.jpg");
-		m_drawer = new ModelDrawer(m_model, &m_transform);
+		m_drawer = ModelDrawer::Create(m_model, &m_transform);
 	}
 };

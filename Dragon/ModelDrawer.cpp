@@ -77,6 +77,13 @@ void ModelDrawer::PublicSet()
 	m_shader->SetUniformValue("projection", projection);
 }
 
+ModelDrawer * ModelDrawer::Create(Model * mesh, Transform * transform)
+{
+	ModelDrawer *drawer = new ModelDrawer(mesh, transform);
+	drawer->Register();
+	return drawer;
+}
+
 GraphicsBuffer * ModelDrawer::LoadGraphicsBuffer(StaticModel *model)
 {
 	if (m_buffersMap.find(model) != m_buffersMap.end())
