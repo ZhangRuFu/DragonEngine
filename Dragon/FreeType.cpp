@@ -36,7 +36,7 @@ void FontRender::Init(void)
 
 	//加载字体
 	vector<const unsigned char*> buffer;
-	FreeType freetype("E:\\arial.ttf", 16);
+	FreeType freetype("E:\\arial.ttf", m_rawFontSize);
 	freetype.GetCharacters(m_charSet, buffer);
 	int fontCount = m_charSet.size();
 	unsigned int *textures = new unsigned int[fontCount];
@@ -56,17 +56,17 @@ void FontRender::Init(void)
 	delete[] textures;
 }
 
-void FontRender::DrawText(const string &str, vec2 position, vec3 color)
+void FontRender::DrawText(const string &str, vec2 position, int fontSize, vec3 color)
 {
-	int preShader = -1;
-	glGetIntegerv(GL_CURRENT_PROGRAM, &preShader);
-	if (preShader == -1)
-		throw exception("获取Shader失败!");
+	float scaleFactor = (float)fontSize / m_rawFontSize;
+	mat4 model;
+	model = glm::scale(model, vec3(scaleFactor));
 	glUniform3fv(m_shader->GetUniformLocation("textColor"), 1, value_ptr(color));
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(m_buffers->m_vao[0]);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	m_shader->SetUniformValue("model", model);
 	for (string::const_iterator iterater = str.begin(); iterater != str.end(); iterater++)
 	{
 		const Character &ch = m_charSet[(*iterater)];
@@ -93,7 +93,18 @@ void FontRender::DrawText(const string &str, vec2 position, vec3 color)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_BLEND);
-	glUseProgram(preShader);
+}
+
+void FontRender::GetDimension(const string &str, int & width, int & height)
+{
+	width = height = 0;
+	for (string::const_iterator iterater = str.begin(); iterater != str.end(); iterater++)
+	{
+		const Character &ch = m_charSet[(*iterater)];
+		width += (ch.m_advance >> 6);
+		if (ch.m_height > height)
+			height = ch.m_height;
+	}
 }
 
 void FontRender::PublicSet(void)

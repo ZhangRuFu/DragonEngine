@@ -198,12 +198,14 @@ int RenderSystem::LoadShaderSource(string fileName, char ** source)
 	errno_t result = fopen_s(&fp, fileName.c_str(), "r");
 	if (result)
 		cout << "Shader文件打开错误!\n";
+
 	fseek(fp, 0, SEEK_END);
 	int len = ftell(fp);
 	rewind(fp);
 	*source = new char[len + 1]();
 	fread(*source, len, 1, fp);
 	len = strlen(*source);
+	fclose(fp);
 	return len;
 }
 

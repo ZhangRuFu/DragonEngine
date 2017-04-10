@@ -65,7 +65,7 @@ protected:
 public:
 	void DrawTriangle(vec2 lt, int width, int height, vec3 color);
 	void DrawRect(vec2 rt, int width, int height, vec3 color);
-	void DrawText(const string &str, vec2 positioin, vec3 color);
+	void DrawText(const string &str, vec2 positioin, int fontSize, vec3 color);
 	void DrawCircle(vec2 lt, int radius, vec3 color);
 	void DrawRoundRect(vec2 lt, int width, int height, int radius, vec3 color);
 	virtual void Draw() = 0;

@@ -59,7 +59,6 @@ void ViewGroup::AddView(View &view)
 {
 	m_viewList.push_back(&view);
 	view.RePosit(m_fatherPosition + m_position);
-	view.ReSize(m_width, m_height);
 }
 
 View* ViewGroup::FindViewByID(string id)
@@ -119,10 +118,13 @@ bool Button::DispatchEvent(Event & ievent)
 	else if(ievent.isMouseKeyUp())
 		m_state = ButtonState::Normal;
 	return true;
-
 }
 
-TextView::TextView(const string & id, vec2 position, int width, int height) : View(id, position, width, height)
+TextView::TextView(const string &id, vec2 position, string string, int fontSize, vec3 color) : View(id, position, 0, 0), m_str(string)
 {
-	//m_textDrawer = new TextDrawer()
+	m_texViewDrawer = TextViewDrawer::Create(this);
+	int width, height;
+	m_texViewDrawer->GetDimension(m_str, width, height);
+	ReSize(width, height);
+	m_fontSize = fontSize;
 }

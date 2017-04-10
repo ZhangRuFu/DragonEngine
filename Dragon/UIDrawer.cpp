@@ -49,5 +49,5 @@ TextViewDrawer * TextViewDrawer::Create(const TextView * texView)
 
 void TextViewDrawer::Draw(void)
 {
-	DrawText(m_texView->GetText(), m_texView->GetAbsolutePosition(), vec3(1.0f, 1.0f, 1.0f));
+	DrawText(m_texView->GetText(), m_texView->GetAbsolutePosition(), m_texView->GetFontSize(), vec3(1.0f, 1.0f, 1.0f));
 }

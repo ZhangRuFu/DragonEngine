@@ -67,14 +67,12 @@ void WindowSystem::KeyEvent(int key, KeyMotion keyMotion)
 void WindowSystem::InitUI(void)
 {
 	m_uiManager = new UIManager(m_frameWidth, m_frameHeight);
-	Button *button = new Button("btnTest", vec2(50, 50), 50, 50);
+	Button *button = new Button("btnTest", vec2(50, 50), 100, 50);
 	MouseListener *i = new iMouseListener();
 	button->SetMouseListener(i);
-	Button *button2 = new Button("btnTest2", vec2(150, 150), 100, 50);
-	button2->SetMouseListener(i);
-	//TextView *tv = new TextView("TextView", vec2(100, 100), ;
+	TextView *tv = new TextView("TexTest", vec2(100, 200), "Hello DragonEngine", 16);
 	m_uiManager->AddView(*button);
-	m_uiManager->AddView(*button2);
+	m_uiManager->AddView(*tv);
 }
 
 WindowSystem * WindowSystem::m_instance = nullptr;

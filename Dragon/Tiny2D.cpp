@@ -35,10 +35,10 @@ void Tiny2D::DrawRect(vec2 rt, int width, int height, vec3 color)
 	glBindVertexArray(0);
 }
 
-void Tiny2D::DrawText(const string &str, vec2 positioin, vec3 color)
+void Tiny2D::DrawText(const string &str, vec2 positioin, int fontSize, vec3 color)
 {
 	FontRender::m_shader->Use();
-	FontRender::DrawText(str, positioin, color);
+	FontRender::DrawText(str, positioin, fontSize, color);
 	Drawer::m_shader->Use();
 }
 
@@ -78,7 +78,9 @@ void Tiny2D::PublicSet()
 {
 	mat4 windowProjection = ResourceSystem::GetMainCamera()->GenWindowProjectionMatrix();
 	Drawer::m_shader->SetUniformValue("projection", windowProjection);
+	FontRender::m_shader->Use();
 	FontRender::PublicSet();
+	Drawer::m_shader->Use();
 }
 
 

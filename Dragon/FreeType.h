@@ -35,10 +35,12 @@ class FontRender : public Drawer
 {
 private:
 	vector<Character> m_charSet;
+	static const int m_rawFontSize = 16;
 
 public:
 	FontRender(string shaderName = "font");
-	void DrawText(const string &str, vec2 position, vec3 color);
+	void DrawText(const string &str, vec2 position, int fontSize, vec3 color);
+	void GetDimension(const string &str, int &width, int &height);
 	virtual void Draw(void) = 0;
 	virtual void PublicSet(void);
 	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::NonRender; }

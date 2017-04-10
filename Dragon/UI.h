@@ -8,9 +8,11 @@
 using std::list;
 using std::string;
 using glm::vec2;
+using glm::vec3;
 using glm::ivec2;
 
 class ButtonDrawer;
+class TextViewDrawer;
 class MouseListener;
 class KeyBoardListener;
 
@@ -47,7 +49,7 @@ public:
 	virtual bool DispatchEvent(Event &ievent);
 	void RePosit(ivec2 fatherPosition) { m_fatherPosition = fatherPosition; }
 	//øÌ∏ﬂ  ≈‰
-	void ReSize(int width, int height) { /*m_width = width;m_height = height;*/ }
+	void ReSize(int width, int height) { m_width = width; m_height = height; }
 
 	string GetViewID(void) { return m_id; }
 	void SetMouseListener(MouseListener *mouseListener) { m_mouseListener = mouseListener; }
@@ -134,12 +136,14 @@ class TextView : public View
 {
 protected:
 	string m_str;
+	int m_fontSize;
+	TextViewDrawer *m_texViewDrawer;
 
 public:
-	TextView(const string &id, vec2 position, int width, int height);
-	const string& GetText(void) const {
-		return m_str;
-	}
+	TextView(const string &id, vec2 position, string string, int fontSize, vec3 color = vec3(1.0, 1.0, 1.0));
+	const string& GetText(void) const { return m_str; }
+	int GetFontSize(void) const { return m_fontSize; }
+	void SetFontSize(int fontSize) { m_fontSize = fontSize; }
 };
 
 /*
