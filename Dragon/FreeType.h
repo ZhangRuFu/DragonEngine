@@ -28,25 +28,25 @@ struct Character
 	int m_width;
 	int m_height;
 	int m_advance;
+	static int m_ascender;
 };
 
 //字体渲染器，由RenderSystem管理，与渲染系统相关
 class FontRender : public Drawer
 {
 private:
-	vector<Character> m_charSet;
+	static vector<Character> m_charSet;
 	static const int m_rawFontSize = 16;
 
 public:
 	FontRender(string shaderName = "font");
 	void DrawText(const string &str, vec2 position, int fontSize, vec3 color);
-	void GetDimension(const string &str, int &width, int &height);
 	virtual void Draw(void) = 0;
 	virtual void PublicSet(void);
 	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::NonRender; }
 
-private:
-	void Init(void);
+	static void GetDimension(const string &str, int &width, int &height);
+	static void Init(void);
 	
 	static GraphicsBuffer *m_graphicBuffer;
 };

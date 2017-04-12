@@ -6,13 +6,14 @@
 
 UIDrawer::UIDrawer(void) {}
 
-ButtonDrawer::ButtonDrawer(const Button *button)
+ButtonDrawer::ButtonDrawer(const Button *button, const TextView *textView) : TextViewDrawer(textView)
 {
 	m_button = button;
 }
 
 void ButtonDrawer::Draw()
 {
+	
 	glm::vec3 position = glm::vec3(m_button->GetAbsolutePosition(), 0.0f);
 	glm::ivec2 dimension = m_button->GetDimension();
 
@@ -25,12 +26,15 @@ void ButtonDrawer::Draw()
 		color += offset;
 	else if (buttonState == ButtonState::Clicked)
 		color -= offset;
+	
 	DrawRect(position, dimension.x, dimension.y, color);
+	TextViewDrawer::Draw();
+	
 }
 
-ButtonDrawer * ButtonDrawer::Create(const Button * button)
+ButtonDrawer * ButtonDrawer::Create(const Button * button, const TextView *textView)
 {
-	ButtonDrawer *drawer = new ButtonDrawer(button);
+	ButtonDrawer *drawer = new ButtonDrawer(button, textView);
 	drawer->Register();
 	return drawer;
 }

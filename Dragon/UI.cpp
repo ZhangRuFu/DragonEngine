@@ -57,8 +57,9 @@ bool ViewGroup::DispatchEvent(Event & ievent)
 
 void ViewGroup::AddView(View &view)
 {
+	view.Active();
 	m_viewList.push_back(&view);
-	view.RePosit(m_fatherPosition + m_position);
+	view.ReFatherPosition(m_fatherPosition + m_position);
 }
 
 View* ViewGroup::FindViewByID(string id)
@@ -97,10 +98,39 @@ glm::mat4 UIManager::GenProjection(void)
 
 UIManager *UIManager::s_instance = nullptr;
 
-Button::Button(const string & id, vec2 position, int width, int height) : View(id, position, width, height)
+Button::Button(const string & id, vec2 position, int width, int height, string text) : View(id, position, width, height), m_text(nullptr)
 {
 	m_state = ButtonState::Normal;
-	m_btnDrawer = ButtonDrawer::Create(this);
+	m_text = new TextView(id, position, text, 16);
+	//计算TextView位置
+	ivec2 dimension = m_text->GetDimension();
+	//默认居中
+	ivec2 texPosition;
+	int offsetX = m_width - dimension.x;
+	int offsetY = m_height - dimension.y;
+	texPosition.x = (offsetX > 0 ? offsetX : 0) / 2.0 + m_position.x;
+	texPosition.y = (offsetY > 0 ? offsetY : 0) / 2.0 + m_position.y;
+	m_text->RePosition(texPosition);
+}
+
+Button::Button(const string & id, vec2 position, string text) : View(id, position, 0, 0), m_text(nullptr)
+{
+	m_state = ButtonState::Normal;
+	m_text = new TextView(id, position, text, 16);
+	
+	ivec2 dimension = m_text->GetDimension();
+	//Button宽高
+	m_width = dimension.x + 2 * m_lrOffset;
+	m_height = dimension.y + 2 * m_ubOffset;
+
+	//计算TextView位置
+	//默认居中
+	ivec2 texPosition;
+	int offsetX = m_width - dimension.x;
+	int offsetY = m_height - dimension.y;
+	texPosition.x = (offsetX > 0 ? offsetX : 0) / 2.0 + m_position.x;
+	texPosition.y = (offsetY > 0 ? offsetY : 0) / 2.0 + m_position.y;
+	m_text->RePosition(texPosition);
 }
 
 bool Button::DispatchEvent(Event & ievent)
@@ -120,11 +150,20 @@ bool Button::DispatchEvent(Event & ievent)
 	return true;
 }
 
+void Button::Active(void)
+{
+	ButtonDrawer::Create(this, m_text);
+}
+
 TextView::TextView(const string &id, vec2 position, string string, int fontSize, vec3 color) : View(id, position, 0, 0), m_str(string)
 {
-	m_texViewDrawer = TextViewDrawer::Create(this);
 	int width, height;
-	m_texViewDrawer->GetDimension(m_str, width, height);
+	FontRender::GetDimension(m_str, width, height);
 	ReSize(width, height);
 	m_fontSize = fontSize;
+}
+
+void TextView::Active(void)
+{
+	TextViewDrawer::Create(this);
 }

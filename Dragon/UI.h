@@ -44,11 +44,13 @@ protected:
 	KeyBoardListener *m_keyListener;
 
 public:
+	virtual void Active(void) = 0;
+
 	View(const string &id, vec2 position, int width, int height);
 
 	virtual bool DispatchEvent(Event &ievent);
-	void RePosit(ivec2 fatherPosition) { m_fatherPosition = fatherPosition; }
-	//宽高适配
+	void ReFatherPosition(ivec2 fatherPosition) { m_fatherPosition = fatherPosition; }
+	void RePosition(ivec2 position) { m_position = position; }
 	void ReSize(int width, int height) { m_width = width; m_height = height; }
 
 	string GetViewID(void) { return m_id; }
@@ -96,12 +98,12 @@ private:
 
 public:
 	UIManager(int width, int height);
-
-public:
 	void AcceptEvent(ivec2 mousePosition, MouseMotion mouseMotion);
 	void AcceptEvent(int keyCode, KeyMotion keyMotion);
 
 	static glm::mat4 GenProjection(void);
+
+	virtual void Active(void) {};
 };
 
 /*
@@ -137,13 +139,13 @@ class TextView : public View
 protected:
 	string m_str;
 	int m_fontSize;
-	TextViewDrawer *m_texViewDrawer;
 
 public:
 	TextView(const string &id, vec2 position, string string, int fontSize, vec3 color = vec3(1.0, 1.0, 1.0));
 	const string& GetText(void) const { return m_str; }
 	int GetFontSize(void) const { return m_fontSize; }
 	void SetFontSize(int fontSize) { m_fontSize = fontSize; }
+	virtual void Active(void);
 };
 
 /*
@@ -160,12 +162,17 @@ class Button : public View
 {
 private:
 	ButtonState m_state;
-	ButtonDrawer *m_btnDrawer;
+	TextView *m_text;
+
+	static const int m_ubOffset = 5;
+	static const int m_lrOffset = 15;
 
 public:
-	Button(const string &id, vec2 position, int width, int height);
+	Button(const string &id, vec2 position, int width, int height, string text="");
+	Button(const string &id, vec2 position, string text = "");
 	ButtonState GetButtonState(void) const { return m_state; }
 	virtual bool DispatchEvent(Event &ievent);
+	virtual void Active(void);
 };
 
 class iMouseListener : public MouseListener
@@ -177,7 +184,7 @@ public:
 		if (view.GetViewID() == "btnTest")
 		{
 			if (e.m_mouseMotion == MouseMotion::LeftButtonDown)
-				std::cout << "左键按下-btnTest" << std::endl;
+				std::cout << "左键按下" << std::endl;
 			else if (e.m_mouseMotion == MouseMotion::RightButtonDown)
 				cout << "右键按下" << endl;
 		}

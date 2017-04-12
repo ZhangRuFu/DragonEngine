@@ -170,14 +170,14 @@ void Shape::Init(void)
 	m_shapes.resize(Basic2D::Basic2DCount);
 
 	//Èý½ÇÐÎ
-	m_shapes[Basic2D::Triangle].m_position.resize(3);
+	m_shapes[Basic2D::Triangle].m_position.reserve(3);
 	m_shapes[Basic2D::Triangle].m_position.push_back(vec3(0.0f, 0.5f, 0.0f));
 	m_shapes[Basic2D::Triangle].m_position.push_back(vec3(-0.5f, -0.5f, 0.0f));
 	m_shapes[Basic2D::Triangle].m_position.push_back(vec3(0.5f, -0.5f, 0.0f));
 	Tranglarize(m_shapes[Basic2D::Triangle].m_index, m_shapes[Basic2D::Triangle].m_position.size());
 
 	//¾ØÐÎ
-	m_shapes[Basic2D::Rectangle].m_position.resize(4);
+	m_shapes[Basic2D::Rectangle].m_position.reserve(4);
 	m_shapes[Basic2D::Rectangle].m_position.push_back(vec3(0.0f, 0.0f, 0.0f));
 	m_shapes[Basic2D::Rectangle].m_position.push_back(vec3(0.0f, -1.0f, 0.0f));
 	m_shapes[Basic2D::Rectangle].m_position.push_back(vec3(1.0f, -1.0f, 0.0f));

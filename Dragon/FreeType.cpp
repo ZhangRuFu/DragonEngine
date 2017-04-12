@@ -12,8 +12,6 @@ FontRender::FontRender(string shaderName) : Drawer(shaderName)
 	if (m_graphicBuffer == nullptr)
 		Init();
 	m_buffers = m_graphicBuffer;
-	
-	Init();
 }
 
 void FontRender::Init(void)
@@ -70,7 +68,7 @@ void FontRender::DrawText(const string &str, vec2 position, int fontSize, vec3 c
 	for (string::const_iterator iterater = str.begin(); iterater != str.end(); iterater++)
 	{
 		const Character &ch = m_charSet[(*iterater)];
-		int fontX = position.x + ch.m_bearingX;
+		/*int fontX = position.x + ch.m_bearingX;
 		int fontY = -position.y - (ch.m_height - ch.m_bearingY);
 		float vertices[6][4]{
 			fontX, fontY + ch.m_height, 0.0, 0.0,
@@ -79,6 +77,17 @@ void FontRender::DrawText(const string &str, vec2 position, int fontSize, vec3 c
 			fontX, fontY + ch.m_height, 0.0, 0.0,
 			fontX + ch.m_width, fontY , 1.0, 1.0,
 			fontX + ch.m_width, fontY + ch.m_height, 1.0, 0.0,
+		};*/
+
+		int fontX = position.x + ch.m_bearingX;
+		int fontY = -position.y - ch.m_ascender + ch.m_bearingY;
+		float vertices[6][4]{
+			fontX, fontY , 0.0, 0.0,
+			fontX, fontY - ch.m_height, 0.0, 1.0,
+			fontX + ch.m_width, fontY - ch.m_height, 1.0, 1.0,
+			fontX, fontY, 0.0, 0.0,
+			fontX + ch.m_width, fontY - ch.m_height, 1.0, 1.0,
+			fontX + ch.m_width, fontY, 1.0, 0.0,
 		};
 
 		glBindTexture(GL_TEXTURE_2D, ch.m_texID);
@@ -103,7 +112,7 @@ void FontRender::GetDimension(const string &str, int & width, int & height)
 		const Character &ch = m_charSet[(*iterater)];
 		width += (ch.m_advance >> 6);
 		if (ch.m_height > height)
-			height = ch.m_height;
+			height = ch.m_height + 2 * (ch.m_ascender - ch.m_bearingY);
 	}
 }
 
@@ -140,6 +149,7 @@ void FreeType::GetCharacters(vector<Character> &charSet, vector<const unsigned c
 	charSet.resize(s_charCount);
 	buffer.resize(s_charCount);
 	unsigned char* fontBuffer = nullptr;
+	Character::m_ascender = m_ftFace->size->metrics.ascender >> 6;
 	for (unsigned long ch = 0; ch < s_charCount; ch++)
 	{
 		if (FT_Load_Char(m_ftFace, ch, FT_LOAD_RENDER))
@@ -161,3 +171,5 @@ void FreeType::GetCharacters(vector<Character> &charSet, vector<const unsigned c
 
 
 GraphicsBuffer *FontRender::m_graphicBuffer = nullptr;
+vector<Character> FontRender::m_charSet;
+int Character::m_ascender = 0;

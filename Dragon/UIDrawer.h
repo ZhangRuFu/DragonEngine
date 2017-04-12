@@ -36,25 +36,6 @@ public:
 /*
 *
 *	引擎版本：Dragon Engine v0.1;
-*	类　　名：ButtonDrawer
-*	描　　述：Button绘制器
-*
-*/
-class ButtonDrawer : public UIDrawer
-{
-protected:
-	const Button *m_button;
-	ButtonDrawer(const Button *button);
-
-public:
-
-	virtual void Draw(void);
-	static ButtonDrawer* Create(const Button *button);
-};
-
-/*
-*
-*	引擎版本：Dragon Engine v0.1;
 *	类　　名：TextViewDrawer
 *	描　　述：TextView绘制器
 *
@@ -69,3 +50,23 @@ public:
 	static TextViewDrawer* Create(const TextView *texView);
 	virtual void Draw(void);
 };
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ButtonDrawer
+*	描　　述：Button绘制器
+*
+*/
+class ButtonDrawer : public TextViewDrawer
+{
+protected:
+	const Button *m_button;
+	ButtonDrawer(const Button *button, const TextView *textView);
+
+public:
+
+	virtual void Draw(void);
+	static ButtonDrawer* Create(const Button * button, const TextView *textView);
+};
+

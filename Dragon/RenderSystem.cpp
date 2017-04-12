@@ -50,6 +50,7 @@ bool RenderSystem::Init()
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glViewport(0, 0, m_frameWidth, m_frameHeight);
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 
 	//加载必要Shader=========================改成XML加载====================================
 	CreateShader("E:\\OpenGL\\Shader\\Assimp\\", "AssimpModel");
@@ -57,6 +58,9 @@ bool RenderSystem::Init()
 	CreateShader("E:\\OpenGL\\Shader\\ModelRender\\Animation\\", "AnimationModel");
 	CreateShader("E:\\OpenGL\\Shader\\2D\\", "2D");
 	CreateShader("E:\\OpenGL\\Shader\\Font\\", "font");
+
+	//字体加载
+	FontRender::Init();
 
 	//预留UI绘制项
 	m_renderList.push_back(DrawerList(-1));
