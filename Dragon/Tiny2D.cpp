@@ -13,6 +13,24 @@ Tiny2D::Tiny2D(string shaderName) : Drawer(shaderName)
 }
 
 
+void Tiny2D::DrawLine(vec2 start, vec2 end, vec3 color, int width)
+{
+	static vec3 point[2];
+	point[0] = vec3(start.x, -start.y, 0.0f);
+	point[1] = vec3(end.x, -end.y, 0.0f);
+	glLineWidth(width);
+	glBindBuffer(GL_ARRAY_BUFFER, Drawer::m_buffers->m_vbo[Shape::Basic2D::Line]);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec3) * 2, &point);
+
+	glm::mat4 model;
+	Drawer::m_shader->SetUniformValue("model", model);
+	glUniform3fv(Drawer::m_shader->GetUniformLocation("color"), 1, value_ptr(color));
+	glBindVertexArray(Drawer::m_buffers->m_vao[Shape::Basic2D::Line]);
+	glDrawArrays(GL_LINES, 0, 2);
+	glBindVertexArray(0);
+	glLineWidth(1);
+}
+
 void Tiny2D::DrawTriangle(vec2 lt, int width, int height, vec3 color)
 {
 	glm::mat4 model = translate(vec3(lt.x, -lt.y, 0.0f));
@@ -65,7 +83,7 @@ void Tiny2D::DrawRoundRect(vec2 lt, int width, int height, int radius, vec3 colo
 	glBindBuffer(GL_ARRAY_BUFFER, Drawer::m_buffers->m_vbo[Shape::Basic2D::RoundedRect]);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec3) * m_shapes->GetVertexCount(Shape::Basic2D::RoundedRect), m_shapes->GetRoundedRectData(width, height, radius));
 	
-	Drawer::m_shader->Use();
+	//Drawer::m_shader->Use();
 	glm::mat4 model = translate(vec3(halfW + lt.x, -(halfH + lt.y), 0.0f));
 	Drawer::m_shader->SetUniformValue("model", model);
 	glUniform3fv(Drawer::m_shader->GetUniformLocation("color"), 1, value_ptr(color));
@@ -99,7 +117,9 @@ void Tiny2D::InitShapeData(void)
 		m_shapeBuffer->m_vao.push_back(bufferObject[i + 2 * Shape::Basic2D::Basic2DCount]);
 	}
 	delete[] bufferObject;
-
+	
+	//线段
+	BufferData(Shape::Basic2D::Line, BufferUsage::DYNAMIC, true);
 
 	//三角形
 	BufferData(Shape::Basic2D::Triangle, BufferUsage::STATIC);
@@ -168,6 +188,11 @@ const void * Shape::GetRoundedRectData(int width, int height, int radius)
 void Shape::Init(void)
 {
 	m_shapes.resize(Basic2D::Basic2DCount);
+
+	//线段
+	m_shapes[Basic2D::Line].m_position.reserve(2);
+	m_shapes[Basic2D::Line].m_position.push_back(vec3(0.0f, 0.0f, 0.0f));
+	m_shapes[Basic2D::Line].m_position.push_back(vec3(0.0f, 0.0f, 0.0f));
 
 	//三角形
 	m_shapes[Basic2D::Triangle].m_position.reserve(3);

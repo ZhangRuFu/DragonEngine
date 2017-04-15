@@ -28,7 +28,7 @@ class Shape
 		vector<unsigned int> m_index;		//Ë÷ÒýÊý¾Ý
 	};
 public:
-	enum Basic2D { Triangle, Rectangle, RoundedRect, Circle, Basic2DCount };
+	enum Basic2D { Line, Triangle, Rectangle, RoundedRect, Circle, Basic2DCount };
 	Shape(void);
 	const void* GetVertexData(Shape::Basic2D shapeIndex) { return m_shapes[shapeIndex].m_position.data(); }
 	int GetVertexCount(Shape::Basic2D shapeIndex) { return m_shapes[shapeIndex].m_position.size(); };
@@ -63,6 +63,7 @@ protected:
 	void Register(void) { Drawer::Register(); }
 
 public:
+	void DrawLine(vec2 start, vec2 end, vec3 color = vec3(1.0, 1.0, 1.0), int width = 1);
 	void DrawTriangle(vec2 lt, int width, int height, vec3 color);
 	void DrawRect(vec2 rt, int width, int height, vec3 color);
 	void DrawText(const string &str, vec2 positioin, int fontSize, vec3 color);

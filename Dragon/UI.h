@@ -44,13 +44,15 @@ protected:
 	KeyBoardListener *m_keyListener;
 
 public:
-	virtual void Active(void) = 0;
-
 	View(const string &id, vec2 position, int width, int height);
 
 	virtual bool DispatchEvent(Event &ievent);
+	virtual void Active(void) = 0;
+
 	void ReFatherPosition(ivec2 fatherPosition) { m_fatherPosition = fatherPosition; }
 	void RePosition(ivec2 position) { m_position = position; }
+	void RePositionX(int x) { m_position.x = x; }
+	void RePositionY(int y) { m_position.y = y; }
 	void ReSize(int width, int height) { m_width = width; m_height = height; }
 
 	string GetViewID(void) { return m_id; }
@@ -58,7 +60,13 @@ public:
 	void SetKeyListener(KeyBoardListener *keyListener) { m_keyListener = keyListener; }
 
 	ivec2 GetAbsolutePosition(void) const { return m_position + m_fatherPosition; }
+	ivec2 GetPosition(void) const { return m_position; }
+	int GetPositionY(void) const { return m_position.y; }
+	int GetPositionX(void) const { return m_position.x; }
 	ivec2 GetDimension(void) const { return ivec2(m_width, m_height); }
+	int GetWidth(void) const { return m_width; }
+	int GetHeight(void) const { return m_height; }
+	void AddPosition(int x, int y) { m_position.x += x, m_position.y += y; }
 };
 
 /*
@@ -143,6 +151,7 @@ protected:
 public:
 	TextView(const string &id, vec2 position, string string, int fontSize, vec3 color = vec3(1.0, 1.0, 1.0));
 	const string& GetText(void) const { return m_str; }
+	void SetText(string str) { m_str = str; }
 	int GetFontSize(void) const { return m_fontSize; }
 	void SetFontSize(int fontSize) { m_fontSize = fontSize; }
 	virtual void Active(void);
@@ -171,6 +180,7 @@ public:
 	Button(const string &id, vec2 position, int width, int height, string text="");
 	Button(const string &id, vec2 position, string text = "");
 	ButtonState GetButtonState(void) const { return m_state; }
+	const TextView *GetTextView(void) const { return m_text; }
 	virtual bool DispatchEvent(Event &ievent);
 	virtual void Active(void);
 };
@@ -196,3 +206,99 @@ public:
 		return true;
 	}
 };
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ClipBar
+*	描　　述：片段选择
+*
+*/
+
+class ClipBarMeasure
+{
+public:
+	static const int m_lenToTop = 20;
+	static const int m_leftOffset = 20;
+	static const int m_rightOffset = 20;
+	static const int m_startToLenDistence = 10;
+	static const int m_axisToStart = 20;
+	static const int m_axisLen = 210;
+	static const int m_slideLen = 10;
+	static const int m_slideToBottom = 10;
+};
+
+class ClipBar : public View
+{
+public:
+	ClipBar(string id, float len, vec2 position, int width = 250, int height = 120);		//构造函数
+	float GetStartValue(void) { return m_start; }
+	float GetEndValue(void) { return m_end; }
+	void SetStartValue(float value);
+	void AddStartValue(float delta) { SetStartValue(delta + m_start); }
+	void AddEndValue(float delta) { SetEndValue(m_end + delta); }
+	void SetEndValue(float value);
+	float GetLength(void) { return m_length; }
+	int GetSlideMinX(void) { return m_minPositionX; }
+	int GetSlideMaxX(void) { return m_maxPositionX; }
+
+	const TextView* GetStartTextView(void) const { return m_startText; };
+	const TextView* GetEndTextView(void) const { return m_endText; }
+	const TextView* GetLengthTextView(void) const { return m_lenText; };
+	const Button* GetStartButton(void) const { return m_startButton; };
+	const Button* GetEndButton(void) const { return m_endButton; }
+
+	virtual void Active(void);
+	virtual bool DispatchEvent(Event &ievent);
+private:
+	float m_length;
+	float m_start;
+	float m_end;
+
+	TextView *m_startText;
+	TextView *m_endText;
+	TextView *m_lenText;
+	Button *m_startButton;
+	Button *m_endButton;
+
+	int m_minPositionX, m_maxPositionX;
+
+	class ClipButtonListener : public MouseListener
+	{
+	private:
+		ClipBar *m_clipBar;
+
+	public:
+		ClipButtonListener(ClipBar *clipBar) { m_clipBar = clipBar; }
+
+		virtual bool onMouse(View &view, const Event &e)
+		{
+			using namespace std;
+			static bool down = false;
+			static ivec2 position;
+			if (e.m_mouseMotion == MouseMotion::LeftButtonDown)
+			{
+				down = true;
+				position = e.m_mousePosition;
+			}
+			else if (e.m_mouseMotion == MouseMotion::LeftButtonUp)
+				down = false;
+			if (down && e.m_mouseMotion == MouseMotion::MouseMove)
+			{
+				int viewX = view.GetPositionX();
+				float deltaX = e.m_mousePosition.x - position.x;
+				if (viewX + deltaX > m_clipBar->GetSlideMaxX() || viewX + deltaX < m_clipBar->GetSlideMinX())
+					return true;
+				float len = deltaX / ClipBarMeasure::m_axisLen * m_clipBar->GetLength();
+				if (m_clipBar->GetStartButton() == &view)
+					m_clipBar->AddStartValue(len);
+				else
+					m_clipBar->AddEndValue(len);
+				view.AddPosition(deltaX, 0);
+				position = e.m_mousePosition;
+			}
+			return true;
+		}
+	};
+};
+

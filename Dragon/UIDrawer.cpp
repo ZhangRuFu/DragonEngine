@@ -6,9 +6,10 @@
 
 UIDrawer::UIDrawer(void) {}
 
-ButtonDrawer::ButtonDrawer(const Button *button, const TextView *textView) : TextViewDrawer(textView)
+ButtonDrawer::ButtonDrawer(const Button *button)
 {
 	m_button = button;
+	m_textDrawer = TextViewDrawer::Create(button->GetTextView(), false);
 }
 
 void ButtonDrawer::Draw()
@@ -28,14 +29,15 @@ void ButtonDrawer::Draw()
 		color -= offset;
 	
 	DrawRect(position, dimension.x, dimension.y, color);
-	TextViewDrawer::Draw();
+	m_textDrawer->Draw();
 	
 }
 
-ButtonDrawer * ButtonDrawer::Create(const Button * button, const TextView *textView)
+ButtonDrawer * ButtonDrawer::Create(const Button * button, bool isRegister)
 {
-	ButtonDrawer *drawer = new ButtonDrawer(button, textView);
-	drawer->Register();
+	ButtonDrawer *drawer = new ButtonDrawer(button);
+	if(isRegister)
+		drawer->Register();
 	return drawer;
 }
 
@@ -44,14 +46,54 @@ TextViewDrawer::TextViewDrawer(const TextView * texView)
 	m_texView = texView;
 }
 
-TextViewDrawer * TextViewDrawer::Create(const TextView * texView)
+TextViewDrawer * TextViewDrawer::Create(const TextView * texView, bool isRegister)
 {
 	TextViewDrawer *drawer = new TextViewDrawer(texView);
-	drawer->Register();
+	if(isRegister)
+		drawer->Register();
 	return drawer;
 }
 
 void TextViewDrawer::Draw(void)
 {
 	DrawText(m_texView->GetText(), m_texView->GetAbsolutePosition(), m_texView->GetFontSize(), vec3(1.0f, 1.0f, 1.0f));
+}
+
+ClipBarDrawer::ClipBarDrawer(const ClipBar * clipBar)
+{
+	m_clipBar = clipBar;
+	m_startText = TextViewDrawer::Create(clipBar->GetStartTextView(), false);
+	m_endText = TextViewDrawer::Create(clipBar->GetEndTextView(), false);
+	m_lenText = TextViewDrawer::Create(clipBar->GetLengthTextView(), false);
+	m_startButton = ButtonDrawer::Create(clipBar->GetStartButton(), false);
+	m_endButton = ButtonDrawer::Create(clipBar->GetEndButton(), false);
+	m_axisPosition.x = ClipBarMeasure::m_leftOffset;
+	m_axisPosition.y = clipBar->GetStartTextView()->GetPositionY() + clipBar->GetStartTextView()->GetHeight() + ClipBarMeasure::m_axisToStart;
+}
+
+void ClipBarDrawer::Draw(void)
+{
+	ivec2 rt;
+	ivec2 dimension;
+	rt = m_clipBar->GetAbsolutePosition();
+	dimension = m_clipBar->GetDimension();
+	DrawRoundRect(rt, dimension.x, dimension.y, 15 ,vec3(0.7f, 0.1f, 0.2f));
+	rt.x += m_axisPosition.x;
+	rt.y += m_axisPosition.y;
+	DrawLine(vec2(rt.x, rt.y), vec2(rt.x + ClipBarMeasure::m_axisLen, rt.y));
+	DrawLine(vec2(rt.x, rt.y - 5), vec2(rt.x, rt.y + 5));
+	DrawLine(vec2(rt.x + ClipBarMeasure::m_axisLen, rt.y - 5), vec2(rt.x + ClipBarMeasure::m_axisLen, rt.y + 5));
+	m_startText->Draw();
+	m_endText->Draw();
+	m_lenText->Draw();
+	m_startButton->Draw();
+	m_endButton->Draw();
+}
+
+ClipBarDrawer* ClipBarDrawer::Create(const ClipBar * clipBar, bool isRegister)
+{
+	ClipBarDrawer *drawer = new ClipBarDrawer(clipBar);
+	if (isRegister)
+		drawer->Register();
+	return drawer;
 }

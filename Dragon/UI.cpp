@@ -4,6 +4,7 @@
 
 View::View(const string &id, vec2 position, int width, int height) : m_id(id), m_position(position)
 {
+	using std::numeric_limits;
 	m_width = width;
 	m_height = height;
 	m_mouseListener = nullptr;
@@ -98,6 +99,15 @@ glm::mat4 UIManager::GenProjection(void)
 
 UIManager *UIManager::s_instance = nullptr;
 
+
+
+
+
+
+
+
+
+
 Button::Button(const string & id, vec2 position, int width, int height, string text) : View(id, position, width, height), m_text(nullptr)
 {
 	m_state = ButtonState::Normal;
@@ -152,7 +162,7 @@ bool Button::DispatchEvent(Event & ievent)
 
 void Button::Active(void)
 {
-	ButtonDrawer::Create(this, m_text);
+	ButtonDrawer::Create(this);
 }
 
 TextView::TextView(const string &id, vec2 position, string string, int fontSize, vec3 color) : View(id, position, 0, 0), m_str(string)
@@ -166,4 +176,67 @@ TextView::TextView(const string &id, vec2 position, string string, int fontSize,
 void TextView::Active(void)
 {
 	TextViewDrawer::Create(this);
+}
+
+ClipBar::ClipBar(string id, float len, vec2 position, int width, int height) : View(id, position, width, height)
+{
+	m_length = len;
+	m_start = 0;
+	m_end = m_length - 1;
+	char tex[20];
+	sprintf(tex, "Length: %.2f", len);
+	m_lenText = new TextView(id, vec2(ClipBarMeasure::m_leftOffset, ClipBarMeasure::m_lenToTop), tex, 16);
+	m_lenText->ReFatherPosition(ivec2(position.x, position.y));
+	sprintf(tex, "Start: %d", 0);
+	m_startText = new TextView(id, vec2(ClipBarMeasure::m_leftOffset, m_lenText->GetPositionY() + m_lenText->GetHeight() + ClipBarMeasure::m_startToLenDistence), tex, 16);
+	m_startText->ReFatherPosition(ivec2(position.x, position.y));
+	sprintf(tex, "End: %.2f", len - 1);
+	m_endText = new TextView(id, vec2(0, m_startText->GetPositionY()), tex, 16);
+	m_endText->RePositionX(width - m_endText->GetWidth() - ClipBarMeasure::m_rightOffset);
+	m_endText->ReFatherPosition(ivec2(position.x, position.y));
+	m_startButton = new Button(id, vec2(ClipBarMeasure::m_leftOffset - ClipBarMeasure::m_slideLen / 2.0, height - ClipBarMeasure::m_slideLen - ClipBarMeasure::m_slideToBottom), ClipBarMeasure::m_slideLen, ClipBarMeasure::m_slideLen);
+	m_startButton->ReFatherPosition(ivec2(position.x, position.y));
+	m_minPositionX = m_startButton->GetPositionX();
+	m_endButton = new Button(id, vec2(ClipBarMeasure::m_leftOffset + ClipBarMeasure::m_axisLen - ClipBarMeasure::m_slideLen / 2.0, m_startButton->GetPositionY()), ClipBarMeasure::m_slideLen, ClipBarMeasure::m_slideLen);
+	m_endButton->ReFatherPosition(ivec2(position.x, position.y));
+	m_maxPositionX = m_endButton->GetPositionX();
+	ClipButtonListener *listener = new ClipButtonListener(this);
+	m_startButton->SetMouseListener(listener);
+	m_endButton->SetMouseListener(listener);
+}
+
+void ClipBar::SetStartValue(float value)
+{
+	char str[20];
+	sprintf(str, "Start:%.2f", value);
+	m_start = value;
+	m_startText->SetText(str);
+}
+
+void ClipBar::SetEndValue(float value)
+{
+	char str[20];
+	sprintf(str, "End:%.2f", value);
+	m_end = value;
+	m_endText->SetText(str);
+}
+
+void ClipBar::Active(void)
+{
+	ClipBarDrawer::Create(this);
+}
+
+bool ClipBar::DispatchEvent(Event & ievent)
+{
+	if (!View::DispatchEvent(ievent))
+		return false;
+
+	//在View区域
+	if (m_mouseListener != nullptr)
+		m_mouseListener->onMouse(*this, ievent);
+
+	//在本控件区域内
+	m_startButton->DispatchEvent(ievent);
+	m_endButton->DispatchEvent(ievent);
+	return true;
 }

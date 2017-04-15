@@ -7,14 +7,8 @@
 class View;
 class Button;
 class TextView;
+class ClipBar;
 class Tiny2D;
-
-/*
-*
-*	头文件说明：这里是UI控件的绘制部分
-*
-*/
-
 
 /*
 *
@@ -47,7 +41,7 @@ protected:
 	TextViewDrawer(const TextView *texView);
 
 public:
-	static TextViewDrawer* Create(const TextView *texView);
+	static TextViewDrawer* Create(const TextView *texView, bool isRegister = true);
 	virtual void Draw(void);
 };
 
@@ -58,15 +52,45 @@ public:
 *	描　　述：Button绘制器
 *
 */
-class ButtonDrawer : public TextViewDrawer
+class ButtonDrawer : public UIDrawer
 {
 protected:
 	const Button *m_button;
-	ButtonDrawer(const Button *button, const TextView *textView);
+	TextViewDrawer *m_textDrawer;
+
+	ButtonDrawer(const Button *button);
 
 public:
 
 	virtual void Draw(void);
-	static ButtonDrawer* Create(const Button * button, const TextView *textView);
+	static ButtonDrawer* Create(const Button * button, bool isRegister = true);
 };
 
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ClipBarDrawer
+*	描　　述：ClipBar绘制器
+*
+*/
+
+class ClipBarDrawer : public UIDrawer
+{
+protected:
+	ClipBarDrawer(const ClipBar *clipBar);
+	
+private:
+	const ClipBar *m_clipBar;
+	TextViewDrawer *m_startText;
+	TextViewDrawer *m_endText;
+	TextViewDrawer *m_lenText;
+	ButtonDrawer *m_startButton;
+	ButtonDrawer *m_endButton;
+	
+	ivec2 m_axisPosition;
+
+public:
+	virtual void Draw(void);
+	static ClipBarDrawer* Create(const ClipBar *clipBar, bool isRegister = true);
+};
