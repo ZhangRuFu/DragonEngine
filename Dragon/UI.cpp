@@ -5,6 +5,7 @@
 View::View(const string &id, vec2 position, int width, int height) : m_id(id), m_position(position)
 {
 	using std::numeric_limits;
+	m_drawer = nullptr;
 	m_width = width;
 	m_height = height;
 	m_mouseListener = nullptr;
@@ -28,6 +29,12 @@ bool View::DispatchEvent(Event & ievent)
 	if (m_mouseListener != nullptr)
 		m_mouseListener->onMouse(*this, ievent);
 	return true;
+}
+
+void View::RegisterDrawer(void)
+{
+	if(m_drawer != nullptr)
+		m_drawer->Register();
 }
 
 
@@ -58,7 +65,7 @@ bool ViewGroup::DispatchEvent(Event & ievent)
 
 void ViewGroup::AddView(View &view)
 {
-	view.Active();
+	view.RegisterDrawer();
 	m_viewList.push_back(&view);
 	view.ReFatherPosition(m_fatherPosition + m_position);
 }
@@ -121,6 +128,7 @@ Button::Button(const string & id, vec2 position, int width, int height, string t
 	texPosition.x = (offsetX > 0 ? offsetX : 0) / 2.0 + m_position.x;
 	texPosition.y = (offsetY > 0 ? offsetY : 0) / 2.0 + m_position.y;
 	m_text->RePosition(texPosition);
+	m_drawer = new ButtonDrawer(this);
 }
 
 Button::Button(const string & id, vec2 position, string text) : View(id, position, 0, 0), m_text(nullptr)
@@ -141,6 +149,7 @@ Button::Button(const string & id, vec2 position, string text) : View(id, positio
 	texPosition.x = (offsetX > 0 ? offsetX : 0) / 2.0 + m_position.x;
 	texPosition.y = (offsetY > 0 ? offsetY : 0) / 2.0 + m_position.y;
 	m_text->RePosition(texPosition);
+	m_drawer = new ButtonDrawer(this);
 }
 
 bool Button::DispatchEvent(Event & ievent)
@@ -160,10 +169,6 @@ bool Button::DispatchEvent(Event & ievent)
 	return true;
 }
 
-void Button::Active(void)
-{
-	ButtonDrawer::Create(this);
-}
 
 TextView::TextView(const string &id, vec2 position, string string, int fontSize, vec3 color) : View(id, position, 0, 0), m_str(string)
 {
@@ -171,11 +176,7 @@ TextView::TextView(const string &id, vec2 position, string string, int fontSize,
 	FontRender::GetDimension(m_str, width, height);
 	ReSize(width, height);
 	m_fontSize = fontSize;
-}
-
-void TextView::Active(void)
-{
-	TextViewDrawer::Create(this);
+	m_drawer = new TextViewDrawer(this);
 }
 
 ClipBar::ClipBar(string id, float len, vec2 position, int width, int height) : View(id, position, width, height)
@@ -203,6 +204,7 @@ ClipBar::ClipBar(string id, float len, vec2 position, int width, int height) : V
 	ClipButtonListener *listener = new ClipButtonListener(this);
 	m_startButton->SetMouseListener(listener);
 	m_endButton->SetMouseListener(listener);
+	m_drawer = new ClipBarDrawer(this);
 }
 
 void ClipBar::SetStartValue(float value)
@@ -221,11 +223,6 @@ void ClipBar::SetEndValue(float value)
 	m_endText->SetText(str);
 }
 
-void ClipBar::Active(void)
-{
-	ClipBarDrawer::Create(this);
-}
-
 bool ClipBar::DispatchEvent(Event & ievent)
 {
 	if (!View::DispatchEvent(ievent))
@@ -239,4 +236,42 @@ bool ClipBar::DispatchEvent(Event & ievent)
 	m_startButton->DispatchEvent(ievent);
 	m_endButton->DispatchEvent(ievent);
 	return true;
+}
+
+ListView::ListView(string id, vec2 position, int width, int height) : View(id, position, width, height)
+{
+	m_drawer = new ListViewDrawer(this);
+}
+
+void ListView::AddItem(ListItem * item)
+{
+	if (item == nullptr)
+		return;
+	ivec2 fPosition = GetAbsolutePosition();
+	item->ReFatherPosition(fPosition);
+	item->ReSize(m_width, 60);
+	item->RePosition(ivec2(0, 0));
+	m_items.push_back(item);
+}
+
+ClipItem::ClipItem(string clipName, float start, float end)
+{
+	m_clipName = clipName;
+	m_start = start;
+	m_end = end;
+
+	char str[20];
+	m_texClip = new TextView(m_id, vec2(0, 0), clipName, 16);
+	m_texClip->ReFatherPosition(m_position);
+	sprintf(str, "Start:%f", m_start);
+	m_texStart = new TextView(m_id, vec2(0, m_texClip->GetHeight()), str, 16);
+	m_texStart->ReFatherPosition(m_position);
+	sprintf(str, "Start:%f", m_end);
+	m_texEnd = new TextView(m_id, vec2(m_texStart->GetWidth() + 20, m_texClip->GetHeight()), str, 16);
+	m_texStart->ReFatherPosition(m_position);
+	m_drawer = new ClipItemDrawer(this);
+}
+
+ListItem::ListItem(string id, vec2 position, int width, int height) : View(id, position, width, height)
+{
 }

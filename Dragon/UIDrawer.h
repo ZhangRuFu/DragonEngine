@@ -1,4 +1,5 @@
 #pragma once
+#include <list>
 #include "CommonType.h"
 #include "Shader.h"
 #include "Tiny2D.h"
@@ -9,6 +10,10 @@ class Button;
 class TextView;
 class ClipBar;
 class Tiny2D;
+class ListView;
+class ClipItem;
+
+using std::list;
 
 /*
 *
@@ -25,6 +30,8 @@ public:
 
 	virtual void Draw() = 0;
 	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::UI; }
+
+	void Register() { Drawer::Register(); }
 };
 
 /*
@@ -36,12 +43,11 @@ public:
 */
 class TextViewDrawer : public UIDrawer
 {
-protected:
+public:
 	const TextView *m_texView;
 	TextViewDrawer(const TextView *texView);
 
 public:
-	static TextViewDrawer* Create(const TextView *texView, bool isRegister = true);
 	virtual void Draw(void);
 };
 
@@ -58,12 +64,11 @@ protected:
 	const Button *m_button;
 	TextViewDrawer *m_textDrawer;
 
-	ButtonDrawer(const Button *button);
+	
 
 public:
-
+	ButtonDrawer(const Button *button);
 	virtual void Draw(void);
-	static ButtonDrawer* Create(const Button * button, bool isRegister = true);
 };
 
 
@@ -78,9 +83,6 @@ public:
 class ClipBarDrawer : public UIDrawer
 {
 protected:
-	ClipBarDrawer(const ClipBar *clipBar);
-	
-private:
 	const ClipBar *m_clipBar;
 	TextViewDrawer *m_startText;
 	TextViewDrawer *m_endText;
@@ -92,5 +94,49 @@ private:
 
 public:
 	virtual void Draw(void);
-	static ClipBarDrawer* Create(const ClipBar *clipBar, bool isRegister = true);
+	ClipBarDrawer(const ClipBar *clipBar);
+};
+
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ClipItemDrawer
+*	描　　述：ClipItem绘制器
+*
+*/
+
+class ClipItemDrawer : public UIDrawer
+{
+private:
+	ClipItem *m_clipItem;
+	TextViewDrawer *m_texClip;
+	TextViewDrawer *m_texStart;
+	TextViewDrawer *m_texEnd;
+
+public:
+	ClipItemDrawer(ClipItem *clipItem);
+
+	virtual void Draw(void);
+	
+
+};
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ListViewDrawer
+*	描　　述：ListView绘制器
+*
+*/
+
+class ListViewDrawer : public UIDrawer
+{
+private:
+	const ListView *m_listView;
+	list<UIDrawer*> m_itemDrawers;
+
+public:
+	ListViewDrawer(const ListView *listView);
+	virtual void Draw();
 };

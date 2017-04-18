@@ -13,6 +13,7 @@ using glm::ivec2;
 
 class ButtonDrawer;
 class TextViewDrawer;
+class UIDrawer;
 class MouseListener;
 class KeyBoardListener;
 
@@ -39,26 +40,23 @@ protected:
 	ivec2 m_fatherPosition;				//¾ø¶ÔÎ»ÖÃ
 	int m_width, m_height;
 
+	UIDrawer *m_drawer;
+
 	//¼àÌýÆ÷
 	MouseListener *m_mouseListener;
 	KeyBoardListener *m_keyListener;
 
 public:
 	View(const string &id, vec2 position, int width, int height);
-
 	virtual bool DispatchEvent(Event &ievent);
-	virtual void Active(void) = 0;
 
+	//Î»ÖÃ
 	void ReFatherPosition(ivec2 fatherPosition) { m_fatherPosition = fatherPosition; }
 	void RePosition(ivec2 position) { m_position = position; }
 	void RePositionX(int x) { m_position.x = x; }
 	void RePositionY(int y) { m_position.y = y; }
 	void ReSize(int width, int height) { m_width = width; m_height = height; }
-
-	string GetViewID(void) { return m_id; }
-	void SetMouseListener(MouseListener *mouseListener) { m_mouseListener = mouseListener; }
-	void SetKeyListener(KeyBoardListener *keyListener) { m_keyListener = keyListener; }
-
+	
 	ivec2 GetAbsolutePosition(void) const { return m_position + m_fatherPosition; }
 	ivec2 GetPosition(void) const { return m_position; }
 	int GetPositionY(void) const { return m_position.y; }
@@ -67,6 +65,14 @@ public:
 	int GetWidth(void) const { return m_width; }
 	int GetHeight(void) const { return m_height; }
 	void AddPosition(int x, int y) { m_position.x += x, m_position.y += y; }
+	string GetViewID(void) { return m_id; }
+
+	//ÊÂ¼þ¼àÌý
+	void SetMouseListener(MouseListener *mouseListener) { m_mouseListener = mouseListener; }
+	void SetKeyListener(KeyBoardListener *keyListener) { m_keyListener = keyListener; }
+
+	void RegisterDrawer(void);
+	UIDrawer* GetDrawer(void) const { return m_drawer; }
 };
 
 /*
@@ -110,8 +116,6 @@ public:
 	void AcceptEvent(int keyCode, KeyMotion keyMotion);
 
 	static glm::mat4 GenProjection(void);
-
-	virtual void Active(void) {};
 };
 
 /*
@@ -154,7 +158,6 @@ public:
 	void SetText(string str) { m_str = str; }
 	int GetFontSize(void) const { return m_fontSize; }
 	void SetFontSize(int fontSize) { m_fontSize = fontSize; }
-	virtual void Active(void);
 };
 
 /*
@@ -180,9 +183,12 @@ public:
 	Button(const string &id, vec2 position, int width, int height, string text="");
 	Button(const string &id, vec2 position, string text = "");
 	ButtonState GetButtonState(void) const { return m_state; }
-	const TextView *GetTextView(void) const { return m_text; }
+	const TextView *GetTextView(void) const 
+	{ 
+		int i = 5;
+		return m_text; 
+	}
 	virtual bool DispatchEvent(Event &ievent);
-	virtual void Active(void);
 };
 
 class iMouseListener : public MouseListener
@@ -248,7 +254,6 @@ public:
 	const Button* GetStartButton(void) const { return m_startButton; };
 	const Button* GetEndButton(void) const { return m_endButton; }
 
-	virtual void Active(void);
 	virtual bool DispatchEvent(Event &ievent);
 private:
 	float m_length;
@@ -302,3 +307,37 @@ private:
 	};
 };
 
+class ListItem : public View
+{
+public:
+	ListItem(string id = "item", vec2 position = vec2(0, 0), int width = 0, int height = 0);
+};
+
+class ClipItem : public ListItem
+{
+private:
+	string m_clipName;
+	float m_start;
+	float m_end;
+
+	TextView *m_texClip;
+	TextView *m_texStart;
+	TextView *m_texEnd;
+
+public:
+	ClipItem(string clipName, float start, float end);
+	const TextView* GetClipNameTextView(void) { return m_texClip; }
+	const TextView* GetStartTextView(void) { return m_texStart; }
+	const TextView* GetEndTextView(void) { return m_texEnd; }
+};
+
+class ListView : public View
+{
+private:
+	list<ListItem*> m_items;
+
+public:
+	ListView(string id, vec2 position, int width = 200, int height = 400);
+	void AddItem(ListItem* item);
+	list<ListItem*> GetItems(void) const { return m_items; }
+};

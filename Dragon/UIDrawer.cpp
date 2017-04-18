@@ -9,7 +9,7 @@ UIDrawer::UIDrawer(void) {}
 ButtonDrawer::ButtonDrawer(const Button *button)
 {
 	m_button = button;
-	m_textDrawer = TextViewDrawer::Create(button->GetTextView(), false);
+	m_textDrawer = dynamic_cast<TextViewDrawer*>(button->GetTextView()->GetDrawer());
 }
 
 void ButtonDrawer::Draw()
@@ -33,26 +33,12 @@ void ButtonDrawer::Draw()
 	
 }
 
-ButtonDrawer * ButtonDrawer::Create(const Button * button, bool isRegister)
-{
-	ButtonDrawer *drawer = new ButtonDrawer(button);
-	if(isRegister)
-		drawer->Register();
-	return drawer;
-}
 
 TextViewDrawer::TextViewDrawer(const TextView * texView)
 {
 	m_texView = texView;
 }
 
-TextViewDrawer * TextViewDrawer::Create(const TextView * texView, bool isRegister)
-{
-	TextViewDrawer *drawer = new TextViewDrawer(texView);
-	if(isRegister)
-		drawer->Register();
-	return drawer;
-}
 
 void TextViewDrawer::Draw(void)
 {
@@ -62,11 +48,11 @@ void TextViewDrawer::Draw(void)
 ClipBarDrawer::ClipBarDrawer(const ClipBar * clipBar)
 {
 	m_clipBar = clipBar;
-	m_startText = TextViewDrawer::Create(clipBar->GetStartTextView(), false);
-	m_endText = TextViewDrawer::Create(clipBar->GetEndTextView(), false);
-	m_lenText = TextViewDrawer::Create(clipBar->GetLengthTextView(), false);
-	m_startButton = ButtonDrawer::Create(clipBar->GetStartButton(), false);
-	m_endButton = ButtonDrawer::Create(clipBar->GetEndButton(), false);
+	m_startText = dynamic_cast<TextViewDrawer*>(clipBar->GetStartTextView()->GetDrawer());
+	m_endText = dynamic_cast<TextViewDrawer*>(clipBar->GetEndTextView()->GetDrawer());
+	m_lenText = dynamic_cast<TextViewDrawer*>(clipBar->GetLengthTextView()->GetDrawer());
+	m_startButton = dynamic_cast<ButtonDrawer*>(clipBar->GetStartButton()->GetDrawer());
+	m_endButton = dynamic_cast<ButtonDrawer*>(clipBar->GetEndButton()->GetDrawer());
 	m_axisPosition.x = ClipBarMeasure::m_leftOffset;
 	m_axisPosition.y = clipBar->GetStartTextView()->GetPositionY() + clipBar->GetStartTextView()->GetHeight() + ClipBarMeasure::m_axisToStart;
 }
@@ -90,10 +76,42 @@ void ClipBarDrawer::Draw(void)
 	m_endButton->Draw();
 }
 
-ClipBarDrawer* ClipBarDrawer::Create(const ClipBar * clipBar, bool isRegister)
+ListViewDrawer::ListViewDrawer(const ListView * listView)
 {
-	ClipBarDrawer *drawer = new ClipBarDrawer(clipBar);
-	if (isRegister)
-		drawer->Register();
-	return drawer;
+	m_listView = listView;
+	list<ListItem*> items = listView->GetItems();
+	for (list<ListItem*>::const_iterator i = items.cbegin(); i != items.cend(); i++)
+		m_itemDrawers.push_back((*i)->GetDrawer());
+}
+
+void ListViewDrawer::Draw()
+{
+	ivec2 dimension = m_listView->GetDimension();
+	ivec2 rt = m_listView->GetAbsolutePosition();
+	DrawRect(rt, dimension.x, dimension.y, vec3(0.75, 1.0, 0.24));
+	
+	list<ListItem*> items = m_listView->GetItems();
+	for (list<ListItem*>::const_iterator i = items.cbegin(); i != items.cend(); i++)
+		(*i)->GetDrawer()->Draw();
+	/*for (list<UIDrawer*>::const_iterator i = m_itemDrawers.cbegin(); i != m_itemDrawers.cend(); i++)
+		(*i)->Draw();*/
+}
+
+ClipItemDrawer::ClipItemDrawer(ClipItem * clipItem)
+{
+	m_clipItem = clipItem;
+	m_texClip = dynamic_cast<TextViewDrawer*>(m_clipItem->GetClipNameTextView()->GetDrawer());
+	m_texStart = dynamic_cast<TextViewDrawer*>(m_clipItem->GetStartTextView()->GetDrawer());
+	m_texEnd = dynamic_cast<TextViewDrawer*>(m_clipItem->GetEndTextView()->GetDrawer());
+}
+
+void ClipItemDrawer::Draw(void)
+{
+	ivec2 itemDimension;
+	itemDimension = m_clipItem->GetDimension();
+	ivec2 rt = m_clipItem->GetAbsolutePosition();
+	DrawRect(rt, itemDimension.x, itemDimension.y, vec3(0.5, 0.2, 0.5));
+	m_texClip->Draw();
+	m_texStart->Draw();
+	m_texEnd->Draw();
 }

@@ -70,10 +70,14 @@ void WindowSystem::InitUI(void)
 	//Button *button = new Button("btnTest", vec2(50, 50), 80, 30, "Button");
 	Button *button2 = new Button("btnTest2", vec2(10, 500), "Self-Resize-Button");
 	ClipBar *clpBar = new ClipBar("clpTest", 100, vec2(50, 10));
+	ListView *lstView = new ListView("lstView", vec2(550, 50));
+	ClipItem *item = new ClipItem("T", 10, 20);
+	lstView->AddItem(item);
 	//MouseListener *i = new iMouseListener();
 	//button->SetMouseListener(i);
 	//TextView *tv = new TextView("TexTest", vec2(50, 150), "Hello DragonEngine", 16);
 	//m_uiManager->AddView(*button);
+	m_uiManager->AddView(*lstView);
 	m_uiManager->AddView(*button2);
 	m_uiManager->AddView(*clpBar);
 	//m_uiManager->AddView(*tv);
