@@ -1,12 +1,11 @@
 #include "WindowSystem.h"
 #include "InputSystem.h"
 #include "CommonType.h"
-#include "UI.h"
-#include "UIDrawer.h"
+#include "Activity.h"
 
 WindowSystem::WindowSystem(int width, int height, string windowName) : m_windowWidth(width), m_windowHeight(height), m_windowName(windowName)
 {
-	
+	m_engine = nullptr;
 }
 
 void WindowSystem::GetFrameSize(int & frameWidth, int & frameHeight)
@@ -15,14 +14,14 @@ void WindowSystem::GetFrameSize(int & frameWidth, int & frameHeight)
 	frameHeight = m_frameHeight;
 }
 
-void WindowSystem::AssignEngine(DragonEngine * engine)
-{
-	m_engine = engine;
-}
-
 void WindowSystem::AssignInput(InputSystem * input)
 {
 	m_input = input;
+}
+
+void WindowSystem::AssginEngine(DragonEngine * engine)
+{
+	m_engine = engine;
 }
 
 void WindowSystem::GetWindowSize(int &frameWidth, int &frameHeight)
@@ -30,9 +29,11 @@ void WindowSystem::GetWindowSize(int &frameWidth, int &frameHeight)
 	m_instance->GetFrameSize(frameWidth, frameHeight);
 }
 
-void WindowSystem::Render()
+
+void WindowSystem::AddActivity(Activity * activity)
 {
-	
+	UIModel::AddActivity(activity);
+	activity->OnMeasure(m_frameWidth, m_frameHeight);
 }
 
 void WindowSystem::MouseEvent(int x, int y, MouseMotion mouseMotion)
@@ -53,7 +54,7 @@ void WindowSystem::MouseEvent(int x, int y, MouseMotion mouseMotion)
 	{
 		m_input->MouseKeyUp(buttonMap[mouseMotion]);
 	}
-	m_uiManager->DispatchEvent(mouseEvent);
+	GetActive()->AcceptEvent(ivec2(x, y), mouseMotion);
 }
 
 void WindowSystem::KeyEvent(int key, KeyMotion keyMotion)
@@ -62,25 +63,7 @@ void WindowSystem::KeyEvent(int key, KeyMotion keyMotion)
 		m_input->KeyDown(key);
 	else if (keyMotion == KeyMotion::KeyUp)
 		m_input->KeyUp(key);
-}
-
-void WindowSystem::InitUI(void)
-{
-	m_uiManager = new UIManager(m_frameWidth, m_frameHeight);
-	//Button *button = new Button("btnTest", vec2(50, 50), 80, 30, "Button");
-	Button *button2 = new Button("btnTest2", vec2(10, 500), "Self-Resize-Button");
-	ClipBar *clpBar = new ClipBar("clpTest", 100, vec2(50, 10));
-	ListView *lstView = new ListView("lstView", vec2(550, 50));
-	ClipItem *item = new ClipItem("T", 10, 20);
-	lstView->AddItem(item);
-	//MouseListener *i = new iMouseListener();
-	//button->SetMouseListener(i);
-	//TextView *tv = new TextView("TexTest", vec2(50, 150), "Hello DragonEngine", 16);
-	//m_uiManager->AddView(*button);
-	m_uiManager->AddView(*lstView);
-	m_uiManager->AddView(*button2);
-	m_uiManager->AddView(*clpBar);
-	//m_uiManager->AddView(*tv);
+	GetActive()->AcceptEvent(key, keyMotion);
 }
 
 WindowSystem * WindowSystem::m_instance = nullptr;

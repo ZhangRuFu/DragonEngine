@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Activity.cpp" />
     <ClCompile Include="AnimationModelDrawer.cpp" />
     <ClCompile Include="AssimpMeshLoader.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -175,9 +176,11 @@
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="UIDrawer.cpp" />
+    <ClCompile Include="UIModel.cpp" />
     <ClCompile Include="WindowSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Activity.h" />
     <ClInclude Include="AnimationModelDrawer.h" />
     <ClInclude Include="AssimpMeshLoader.h" />
     <ClInclude Include="Camera.h" />
@@ -208,6 +211,7 @@
     <ClInclude Include="Transform.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="UIDrawer.h" />
+    <ClInclude Include="UIModel.h" />
     <ClInclude Include="WindowSystem.h" />
     <ClInclude Include="WoodPlane.h" />
   </ItemGroup>

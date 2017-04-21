@@ -11,112 +11,8 @@ using glm::vec2;
 using glm::vec3;
 using glm::ivec2;
 
-class ButtonDrawer;
-class TextViewDrawer;
-class UIDrawer;
-class MouseListener;
-class KeyBoardListener;
-
-/*
-*
-*	头文件说明：这里是UI部分的纯逻辑、数据表示，与绘制无关
-*
-*/
-
-
-/*
-*
-*	引擎版本：Dragon Engine v0.1;
-*	类　　名：View
-*	描　　述：UI控件基类
-*
-*/
-
-class View
-{
-protected:
-	string m_id;
-	ivec2 m_position;					//相对于父对象
-	ivec2 m_fatherPosition;				//绝对位置
-	int m_width, m_height;
-
-	UIDrawer *m_drawer;
-
-	//监听器
-	MouseListener *m_mouseListener;
-	KeyBoardListener *m_keyListener;
-
-public:
-	View(const string &id, vec2 position, int width, int height);
-	virtual bool DispatchEvent(Event &ievent);
-
-	//位置
-	void ReFatherPosition(ivec2 fatherPosition) { m_fatherPosition = fatherPosition; }
-	void RePosition(ivec2 position) { m_position = position; }
-	void RePositionX(int x) { m_position.x = x; }
-	void RePositionY(int y) { m_position.y = y; }
-	void ReSize(int width, int height) { m_width = width; m_height = height; }
-	
-	ivec2 GetAbsolutePosition(void) const { return m_position + m_fatherPosition; }
-	ivec2 GetPosition(void) const { return m_position; }
-	int GetPositionY(void) const { return m_position.y; }
-	int GetPositionX(void) const { return m_position.x; }
-	ivec2 GetDimension(void) const { return ivec2(m_width, m_height); }
-	int GetWidth(void) const { return m_width; }
-	int GetHeight(void) const { return m_height; }
-	void AddPosition(int x, int y) { m_position.x += x, m_position.y += y; }
-	string GetViewID(void) { return m_id; }
-
-	//事件监听
-	void SetMouseListener(MouseListener *mouseListener) { m_mouseListener = mouseListener; }
-	void SetKeyListener(KeyBoardListener *keyListener) { m_keyListener = keyListener; }
-
-	void RegisterDrawer(void);
-	UIDrawer* GetDrawer(void) const { return m_drawer; }
-};
-
-/*
-*
-*	引擎版本：Dragon Engine v0.1;
-*	类　　名：ViewGroup
-*	描　　述：View容器，可包含多个View，ListView中ListItem继承至此。也就是可配置、扩展的控件
-*
-*/
-
-//==================================改成View*就好了？=============================
-class ViewGroup : public View
-{
-protected:
-	list<View*> m_viewList;
-
-public:
-	ViewGroup(const string &id, vec2 position, int width, int height) : View(id, position, width, height) {}
-	virtual bool DispatchEvent(Event &ievent);
-
-	void AddView(View& view);
-	View* FindViewByID(string id);
-};
-
-/*
-*
-*	引擎版本：Dragon Engine v0.1;
-*	类　　名：UIManager
-*	描　　述：管理UI控件
-*
-*/
-
-class UIManager : public ViewGroup
-{
-private:
-	static UIManager *s_instance;
-
-public:
-	UIManager(int width, int height);
-	void AcceptEvent(ivec2 mousePosition, MouseMotion mouseMotion);
-	void AcceptEvent(int keyCode, KeyMotion keyMotion);
-
-	static glm::mat4 GenProjection(void);
-};
+class Tiny2D;
+class View;
 
 /*
 *	MouseListener 鼠标监听器
@@ -135,6 +31,90 @@ public:
 	virtual bool onKey(View &view, const Event &e) = 0;
 };
 
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：View
+*	描　　述：UI控件基类
+*
+*/
+
+class View
+{
+public:
+	enum Dimension{MATCH_PARENT = -2, WRAP_CONTENT = -1};
+
+protected:
+	string m_id;
+	ivec2 m_relativePosition;					//相对于父View的相对位置
+	ivec2 m_fatherPosition;						//父级View位置
+	int m_layoutWidth, m_layoutHeight;			//布局参数
+	int m_width, m_height;						//宽、高
+	View *m_parentView;							//父级视图
+
+	//监听器
+	MouseListener *m_mouseListener;
+	KeyBoardListener *m_keyListener;
+
+public:
+	View(const string &id, ivec2 &position, int layoutWidth, int layoutHeight);
+	
+	//虚函数
+	virtual bool DispatchEvent(Event &ievent);						//事件分发
+	virtual void OnMeasure(int fatherWidth, int fatherHeight);		//尺寸测定
+	virtual void OnDraw(Tiny2D *paint) = 0;							//绘制
+	virtual void RequestMeasure(void) { OnMeasure(m_parentView->GetWidth(), m_parentView->GetHeight()); }
+
+	//位置
+	void SetFatherPosition(ivec2 fatherPosition) { m_fatherPosition = fatherPosition; }
+	void SetPosition(ivec2 position) { m_relativePosition = position; }
+	void SetPositionX(int x) { m_relativePosition.x = x; }
+	void SetPositionY(int y) { m_relativePosition.y = y; }
+	void AddPosition(int x, int y) { m_relativePosition.x += x, m_relativePosition.y += y; }
+	void SetSize(int width, int height) { m_width = width; m_height = height; }
+	void SetDimension(int width, int height) { m_width = width, m_height = height; }
+
+	ivec2 GetAbsolutePosition(void) const { return m_relativePosition + m_fatherPosition; }
+	ivec2 GetPosition(void) const { return m_relativePosition; }
+	int GetPositionY(void) const { return m_relativePosition.y; }
+	int GetPositionX(void) const { return m_relativePosition.x; }
+	ivec2 GetDimension(void) const { return ivec2(m_width, m_height); }
+	int GetWidth(void) const { return m_width; }
+	int GetHeight(void) const { return m_height; }
+	
+	string GetViewID(void) { return m_id; }
+	void SetParentView(View *parent);
+
+	//事件监听
+	void SetMouseListener(MouseListener *mouseListener) { m_mouseListener = mouseListener; }
+	void SetKeyListener(KeyBoardListener *keyListener) { m_keyListener = keyListener; }
+};
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ViewGroup
+*	描　　述：View容器，可包含多个View，ListView中ListItem继承至此。也就是可配置、扩展的控件
+*
+*/
+
+class ViewGroup : public View
+{
+protected:
+	list<View*> m_viewList;
+
+public:
+	//ViewGroup的宽度和高度不能为WRAP_CONTENT
+	ViewGroup(const string id, ivec2 position, int width, int height) : View(id, position, width, height) {}
+	virtual bool DispatchEvent(Event &ievent);						//事件分发
+	virtual void OnMeasure(int fatherWidth, int fatherHeight);		//尺寸测定
+	virtual void OnDraw(Tiny2D *paint);								//绘制
+	void AddView(View *view);
+	View* FindViewByID(string id);
+};
+
+
+
 
 //============================================具体UI===========================================
 
@@ -148,16 +128,35 @@ public:
 
 class TextView : public View
 {
+public:
+	enum TextAligin{Top = 1, Bottom = 2, Left = 4, Right = 8, Center = 15};
+	
+private:
+	const int LRPadding = 15;
+	const int TBPadding = 10;
+
 protected:
-	string m_str;
+	string m_text;
 	int m_fontSize;
+	vec3 m_fontColor;
+	ivec2 m_fontPosition;
+	TextAligin m_texAlign;
 
 public:
-	TextView(const string &id, vec2 position, string string, int fontSize, vec3 color = vec3(1.0, 1.0, 1.0));
-	const string& GetText(void) const { return m_str; }
-	void SetText(string str) { m_str = str; }
+	TextView(const string id, ivec2 position, string text, int width = Dimension::WRAP_CONTENT, int height = Dimension::WRAP_CONTENT, TextAligin texAlign = TextAligin::Center, vec3 color = vec3(1.0, 1.0, 1.0), int fontSize = 16);
+
+	//Override
+	virtual void OnMeasure(int fatherWidth, int fatherHeight);
+	virtual void OnDraw(Tiny2D *paint);
+
+	string GetText(void) const { return m_text; }
+	void SetText(string text) { m_text = text; }
+	vec3 GetFontColor(void) const { return m_fontColor; }
+	void SetFontColor(vec3 color) { m_fontColor = color; }
 	int GetFontSize(void) const { return m_fontSize; }
 	void SetFontSize(int fontSize) { m_fontSize = fontSize; }
+	TextAligin GetTextAlign(void) { return m_texAlign; }
+	void SetTextAlign(TextAligin texAlign) { m_texAlign = texAlign; }
 };
 
 /*
@@ -170,47 +169,19 @@ public:
 
 enum ButtonState { Normal, Focus, Clicked };
 
-class Button : public View
+class Button : public TextView
 {
 private:
 	ButtonState m_state;
-	TextView *m_text;
-
-	static const int m_ubOffset = 5;
-	static const int m_lrOffset = 15;
 
 public:
-	Button(const string &id, vec2 position, int width, int height, string text="");
-	Button(const string &id, vec2 position, string text = "");
-	ButtonState GetButtonState(void) const { return m_state; }
-	const TextView *GetTextView(void) const 
-	{ 
-		int i = 5;
-		return m_text; 
-	}
+	Button(const string &id, ivec2 position, string text, int width = View::Dimension::WRAP_CONTENT, int height = View::Dimension::WRAP_CONTENT);
+	
+	//Override
+	virtual void OnDraw(Tiny2D *paint);
 	virtual bool DispatchEvent(Event &ievent);
-};
 
-class iMouseListener : public MouseListener
-{
-public:
-	virtual bool onMouse(View &view, const Event &e)
-	{
-		using namespace std;
-		if (view.GetViewID() == "btnTest")
-		{
-			if (e.m_mouseMotion == MouseMotion::LeftButtonDown)
-				std::cout << "左键按下" << std::endl;
-			else if (e.m_mouseMotion == MouseMotion::RightButtonDown)
-				cout << "右键按下" << endl;
-		}
-		if (view.GetViewID() == "btnTest2")
-		{
-			if (e.m_mouseMotion == MouseMotion::MouseMove)
-				cout << "移动!-btnTest2" << endl;
-		}
-		return true;
-	}
+	ButtonState GetButtonState(void) const { return m_state; }
 };
 
 /*
@@ -237,7 +208,7 @@ public:
 class ClipBar : public View
 {
 public:
-	ClipBar(string id, float len, vec2 position, int width = 250, int height = 120);		//构造函数
+	ClipBar(string id, float len, ivec2 position, int width = 250, int height = 120);		//构造函数
 	float GetStartValue(void) { return m_start; }
 	float GetEndValue(void) { return m_end; }
 	void SetStartValue(float value);
@@ -248,17 +219,15 @@ public:
 	int GetSlideMinX(void) { return m_minPositionX; }
 	int GetSlideMaxX(void) { return m_maxPositionX; }
 
-	const TextView* GetStartTextView(void) const { return m_startText; };
-	const TextView* GetEndTextView(void) const { return m_endText; }
-	const TextView* GetLengthTextView(void) const { return m_lenText; };
-	const Button* GetStartButton(void) const { return m_startButton; };
-	const Button* GetEndButton(void) const { return m_endButton; }
-
+	//Override
+	virtual void OnDraw(Tiny2D *paint);
 	virtual bool DispatchEvent(Event &ievent);
+
 private:
 	float m_length;
 	float m_start;
 	float m_end;
+	ivec2 m_axisPosition;
 
 	TextView *m_startText;
 	TextView *m_endText;
@@ -295,7 +264,7 @@ private:
 				if (viewX + deltaX > m_clipBar->GetSlideMaxX() || viewX + deltaX < m_clipBar->GetSlideMinX())
 					return true;
 				float len = deltaX / ClipBarMeasure::m_axisLen * m_clipBar->GetLength();
-				if (m_clipBar->GetStartButton() == &view)
+				if ("ClipBar.StartButton" == view.GetViewID())
 					m_clipBar->AddStartValue(len);
 				else
 					m_clipBar->AddEndValue(len);
@@ -307,37 +276,37 @@ private:
 	};
 };
 
-class ListItem : public View
-{
-public:
-	ListItem(string id = "item", vec2 position = vec2(0, 0), int width = 0, int height = 0);
-};
-
-class ClipItem : public ListItem
-{
-private:
-	string m_clipName;
-	float m_start;
-	float m_end;
-
-	TextView *m_texClip;
-	TextView *m_texStart;
-	TextView *m_texEnd;
-
-public:
-	ClipItem(string clipName, float start, float end);
-	const TextView* GetClipNameTextView(void) { return m_texClip; }
-	const TextView* GetStartTextView(void) { return m_texStart; }
-	const TextView* GetEndTextView(void) { return m_texEnd; }
-};
-
-class ListView : public View
-{
-private:
-	list<ListItem*> m_items;
-
-public:
-	ListView(string id, vec2 position, int width = 200, int height = 400);
-	void AddItem(ListItem* item);
-	list<ListItem*> GetItems(void) const { return m_items; }
-};
+//class ListItem : public View
+//{
+//public:
+//	ListItem(string id = "item", vec2 position = vec2(0, 0), int width = 0, int height = 0);
+//};
+//
+//class ClipItem : public ListItem
+//{
+//private:
+//	string m_clipName;
+//	float m_start;
+//	float m_end;
+//
+//	TextView *m_texClip;
+//	TextView *m_texStart;
+//	TextView *m_texEnd;
+//
+//public:
+//	ClipItem(string clipName, float start, float end);
+//	const TextView* GetClipNameTextView(void) { return m_texClip; }
+//	const TextView* GetStartTextView(void) { return m_texStart; }
+//	const TextView* GetEndTextView(void) { return m_texEnd; }
+//};
+//
+//class ListView : public View
+//{
+//private:
+//	list<ListItem*> m_items;
+//
+//public:
+//	ListView(string id, vec2 position, int width = 200, int height = 400);
+//	void AddItem(ListItem* item);
+//	list<ListItem*> GetItems(void) const { return m_items; }
+//};

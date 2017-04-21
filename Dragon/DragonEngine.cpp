@@ -3,6 +3,7 @@
 #include "WoodPlane.h"
 #include "Monster.h"
 #include "GLFWWindowSystem.h"
+#include "Activity.h"
 #include <Windows.h>
 #include <iostream>
 
@@ -15,16 +16,14 @@ DragonEngine::DragonEngine(void)
 {
 	string windowName = "Dragon Engine 0.1";
 	int frameWidth, frameHeight;
-	
 	m_gameState = GameState::PreStart;
-	m_windowSystem = new GLFWWindowSystem(800, 800, windowName);
+	m_windowSystem = new GLFWWindowSystem(700, 700, windowName);
+	m_windowSystem->AssginEngine(this);
 	m_windowSystem->GetFrameSize(frameWidth, frameHeight);
-	m_renderSystem = RenderSystem::GetInstance(frameWidth, frameHeight);
+	m_renderSystem = RenderSystem::GetInstance(this, frameWidth, frameHeight);
 	m_resourceSystem = ResourceSystem::GetInstance();
 	m_inputSystem = InputSystem::GetInstance();
-	m_windowSystem->AssignEngine(this);
 	m_windowSystem->AssignInput(m_inputSystem);
-	m_windowSystem->InitUI();
 	m_time = new Time();
 	Init();
 	cout << "DragonEngine->SUCCESS:DragonEngine初始化完成！" << endl;
@@ -57,6 +56,8 @@ void DragonEngine::Start()
 
 void DragonEngine::Init()
 {
+	DragonActivity *activity = new DragonActivity("DragonActivity");
+	m_windowSystem->AddActivity(activity);
 	Camera *m_camera = new Camera();
 	Soldier *soldier = new Soldier();
 	//Monster *monster = new Monster();

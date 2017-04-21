@@ -4,6 +4,8 @@
 #include "Shader.h"
 #include "Tiny2D.h"
 #include "FreeType.h"
+#include "DragonEngine.h"
+#include "Activity.h"
 
 
 #pragma comment(lib, "glew32.lib")
@@ -12,8 +14,9 @@
 using std::cout;
 using std::endl;
 
-RenderSystem::RenderSystem(int frameWidth, int frameHeight)
+RenderSystem::RenderSystem(DragonEngine *engine, int frameWidth, int frameHeight)
 {
+	m_engine = engine;
 	m_frameWidth = frameWidth;
 	m_frameHeight = frameHeight;
 	bool result = Init();
@@ -23,10 +26,13 @@ RenderSystem::RenderSystem(int frameWidth, int frameHeight)
 		cout << "DragonEngine->ERROR:RenderSystem::Init():渲染引擎初始化失败!" << endl;
 }
 
-RenderSystem* RenderSystem::GetInstance(int frameWidth, int frameHeight)
+RenderSystem* RenderSystem::GetInstance(DragonEngine *engine, int frameWidth, int frameHeight)
 {
 	if (m_instance == nullptr)
-		m_instance = new RenderSystem(frameWidth, frameHeight);
+	{
+		m_instance = new RenderSystem(engine, frameWidth, frameHeight);
+		m_instance->PostRender();
+	}
 	return m_instance;
 }
 
@@ -62,8 +68,6 @@ bool RenderSystem::Init()
 	//字体加载
 	FontRender::Init();
 
-	//预留UI绘制项
-	m_renderList.push_back(DrawerList(-1));
 	return true;
 }
 
@@ -72,8 +76,6 @@ void RenderSystem::Draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (unsigned int i = 0; i < m_renderList.size(); i++)
 	{
-		if (m_renderList[i].m_shaderIndex == -1)
-			continue;
 		Shader *shader = m_shaders[m_renderList[i].m_shaderIndex];
 		shader->Use();
 		list<Drawer*> &drawerList = m_renderList[i].m_drawerList;
@@ -85,12 +87,22 @@ void RenderSystem::Draw()
 			(*iterator)->Draw();
 		}
 	}
+
+	//UI绘制
+	m_paint->Drawer::GetShader()->Use();
+	m_paint->PublicSet();
+	m_engine->GetWindowSystem()->GetActive()->OnDraw(m_paint);
 }
 
 void RenderSystem::ReSize(int frameWidth, int frameHeight)
 {
 	m_frameWidth = frameWidth; m_frameHeight = frameHeight;
 	glViewport(0, 0, m_frameWidth, m_frameHeight);
+}
+
+void RenderSystem::PostRender()
+{
+	m_paint = new Tiny2D();
 }
 
 void RenderSystem::_Register(Drawer *drawer)
@@ -114,16 +126,15 @@ void RenderSystem::_Register(Drawer *drawer)
 		}
 
 	//建立绘制项
-
 	vector<DrawerList>::iterator newPos;
-	if (drawer->GetRenderLevel() == RenderLevel::UI)
+	/*if (drawer->GetRenderLevel() == RenderLevel::UI)
 	{
 		newPos = --m_renderList.end();
 		(*newPos).m_shaderIndex = index;
 	}
-	else
-		newPos = m_renderList.insert(--m_renderList.end(), DrawerList(index));
-	(*newPos).m_drawerList.push_back(drawer);
+	else*/
+	m_renderList.push_back(DrawerList(index));			//.insert(--m_renderList.end(), DrawerList(index));
+	m_renderList.back().m_drawerList.push_back(drawer);
 
 }
 

@@ -2,6 +2,9 @@
 #include "FreeType.h"
 #include "RenderSystem.h"
 #include "ResourceSystem.h"
+#include "Shader.h"
+#include <GLM\glm.hpp>
+#include <GLM\gtx\transform.hpp>
 
 using std::exception;
 

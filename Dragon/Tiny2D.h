@@ -56,20 +56,18 @@ private:
 class Tiny2D : public Drawer, public FontRender
 {	
 	enum BufferUsage { STATIC, DYNAMIC, STREAM };
-
-
 protected:
-	Tiny2D(string shaderName = "2D");
 	void Register(void) { Drawer::Register(); }
 
 public:
+	Tiny2D(string shaderName = "2D");
 	void DrawLine(vec2 start, vec2 end, vec3 color = vec3(1.0, 1.0, 1.0), int width = 1);
 	void DrawTriangle(vec2 lt, int width, int height, vec3 color);
 	void DrawRect(vec2 rt, int width, int height, vec3 color);
 	void DrawText(const string &str, vec2 positioin, int fontSize, vec3 color);
 	void DrawCircle(vec2 lt, int radius, vec3 color);
 	void DrawRoundRect(vec2 lt, int width, int height, int radius, vec3 color);
-	virtual void Draw() = 0;
+	virtual void Draw() {}
 	virtual void PublicSet();
 	virtual RenderLevel GetRenderLevel(void) { return RenderLevel::NonRender; }
 

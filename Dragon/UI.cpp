@@ -1,24 +1,24 @@
 #include "UI.h"
-#include "UIDrawer.h"
+#include "Tiny2D.h"
 #include <GLM\gtx\transform.hpp>
 
-View::View(const string &id, vec2 position, int width, int height) : m_id(id), m_position(position)
+View::View(const string &id, ivec2 &position, int layoutWidth, int layoutHeight) : m_id(id), m_relativePosition(position)
 {
-	using std::numeric_limits;
-	m_drawer = nullptr;
-	m_width = width;
-	m_height = height;
+	m_layoutWidth = layoutWidth;
+	m_layoutHeight = layoutHeight;
+	m_width = m_height = 0;
 	m_mouseListener = nullptr;
 	m_keyListener = nullptr;
+	m_parentView = nullptr;
 }
 
 bool View::DispatchEvent(Event & ievent)
 {
 	//View的事件分发
 	//是否在此View区域
-	int startX = m_fatherPosition.x + m_position.x;
+	int startX = m_fatherPosition.x + m_relativePosition.x;
 	int endX = startX + m_width;
-	int startY = m_fatherPosition.y + m_position.y;
+	int startY = m_fatherPosition.y + m_relativePosition.y;
 	int endY = startY + m_height;
 	if (ievent.m_mousePosition.x < startX || ievent.m_mousePosition.x > endX ||
 		ievent.m_mousePosition.y < startY || ievent.m_mousePosition.y > endY)
@@ -31,10 +31,24 @@ bool View::DispatchEvent(Event & ievent)
 	return true;
 }
 
-void View::RegisterDrawer(void)
+void View::OnMeasure(int fatherWidth, int fatherHeight)
 {
-	if(m_drawer != nullptr)
-		m_drawer->Register();
+	//宽度
+	if (m_layoutWidth == Dimension::MATCH_PARENT)
+		m_width = fatherWidth;
+	else if (m_layoutWidth >= 0 )
+		m_width = m_layoutWidth;
+	//高度
+	if (m_layoutHeight == Dimension::MATCH_PARENT)
+		m_height = fatherHeight;
+	else if (m_layoutHeight >= 0)
+		m_height = m_layoutHeight;
+}
+
+void View::SetParentView(View * parent)
+{
+	m_parentView = parent;
+	SetFatherPosition(m_parentView->GetAbsolutePosition());
 }
 
 
@@ -44,9 +58,9 @@ void View::RegisterDrawer(void)
 bool ViewGroup::DispatchEvent(Event & ievent)
 {
 	//ViewGroup的事件分发
-	int startX = m_fatherPosition.x + m_position.x;
+	int startX = m_fatherPosition.x + m_relativePosition.x;
 	int endX = startX + m_width;
-	int startY = m_fatherPosition.y + m_position.y;
+	int startY = m_fatherPosition.y + m_relativePosition.y;
 	int endY = startY + m_height;
 	if (ievent.m_mousePosition.x < startX || ievent.m_mousePosition.x > endX ||
 		ievent.m_mousePosition.y < startY || ievent.m_mousePosition.y > endY)
@@ -63,11 +77,23 @@ bool ViewGroup::DispatchEvent(Event & ievent)
 	return true;
 }
 
-void ViewGroup::AddView(View &view)
+void ViewGroup::OnMeasure(int fatherWidth, int fatherHeight)
 {
-	view.RegisterDrawer();
-	m_viewList.push_back(&view);
-	view.ReFatherPosition(m_fatherPosition + m_position);
+	View::OnMeasure(fatherWidth, fatherHeight);
+	for (list<View*>::iterator i = m_viewList.begin(); i != m_viewList.end(); i++)
+		(*i)->OnMeasure(m_width, m_height);
+}
+
+void ViewGroup::OnDraw(Tiny2D * paint)
+{
+	for (list<View*>::iterator i = m_viewList.begin(); i != m_viewList.end(); i++)
+		(*i)->OnDraw(paint);
+}
+
+void ViewGroup::AddView(View *view)
+{
+	m_viewList.push_back(view);
+	view->SetParentView(this);
 }
 
 View* ViewGroup::FindViewByID(string id)
@@ -78,78 +104,54 @@ View* ViewGroup::FindViewByID(string id)
 	return nullptr;
 }
 
-UIManager::UIManager(int screenWidth, int screenHeight) : ViewGroup("RootView", vec2(0, 0), screenWidth, screenHeight)
+
+TextView::TextView(const string id, ivec2 position, string text, int width, int height, TextAligin texAlign, vec3 color, int fontSize) : View(id, position, width, height), m_text(text)
 {
-	s_instance = this;
-	m_fatherPosition = vec2(0, 0);
+	m_texAlign = texAlign;
+	m_fontColor = color;
+	m_fontSize = fontSize;
 }
 
-void UIManager::AcceptEvent(ivec2 mousePosition, MouseMotion mouseMotion)
+void TextView::OnMeasure(int fatherWidth, int fatherHeight)
 {
-	Event e;
-	e.m_mousePosition = mousePosition;
-	e.m_mouseMotion = mouseMotion;
-	DispatchEvent(e);
+	int texWidth, texHeight;
+	FontRender::GetDimension(m_text, texWidth, texHeight);
+	View::OnMeasure(fatherWidth, fatherHeight);
+	if (m_layoutWidth == View::Dimension::WRAP_CONTENT)
+		m_width = texWidth + 2 * LRPadding;
+	if (m_layoutHeight == View::Dimension::WRAP_CONTENT)
+		m_height = texHeight + 2 * TBPadding;
+	//宽高小于父View宽高怎么办？？？？？？
+	m_fontPosition.x = (m_width - texWidth) / 2.0;
+	m_fontPosition.y = (m_height - texHeight) / 2.0;
 }
 
-void UIManager::AcceptEvent(int keyCode, KeyMotion keyMotion)
+void TextView::OnDraw(Tiny2D * paint)
 {
-	Event e;
-	e.m_keyCode = keyCode;
-	e.m_keyMotion = keyMotion;
+	ivec2 texPosition = GetAbsolutePosition();
+	texPosition.x += m_fontPosition.x;
+	texPosition.y += m_fontPosition.y;
+	paint->DrawText(m_text, texPosition, m_fontSize, m_fontColor);
 }
 
-glm::mat4 UIManager::GenProjection(void)
-{
-	return glm::ortho(0.0f, (float)s_instance->m_width, (float)-s_instance->m_height, 0.0f);
-}
-
-UIManager *UIManager::s_instance = nullptr;
-
-
-
-
-
-
-
-
-
-
-Button::Button(const string & id, vec2 position, int width, int height, string text) : View(id, position, width, height), m_text(nullptr)
+Button::Button(const string &id, ivec2 position, string text, int width, int height) : TextView(id, position, text, width, height)
 {
 	m_state = ButtonState::Normal;
-	m_text = new TextView(id, position, text, 16);
-	//计算TextView位置
-	ivec2 dimension = m_text->GetDimension();
-	//默认居中
-	ivec2 texPosition;
-	int offsetX = m_width - dimension.x;
-	int offsetY = m_height - dimension.y;
-	texPosition.x = (offsetX > 0 ? offsetX : 0) / 2.0 + m_position.x;
-	texPosition.y = (offsetY > 0 ? offsetY : 0) / 2.0 + m_position.y;
-	m_text->RePosition(texPosition);
-	m_drawer = new ButtonDrawer(this);
 }
 
-Button::Button(const string & id, vec2 position, string text) : View(id, position, 0, 0), m_text(nullptr)
+void Button::OnDraw(Tiny2D * paint)
 {
-	m_state = ButtonState::Normal;
-	m_text = new TextView(id, position, text, 16);
-	
-	ivec2 dimension = m_text->GetDimension();
-	//Button宽高
-	m_width = dimension.x + 2 * m_lrOffset;
-	m_height = dimension.y + 2 * m_ubOffset;
+	static glm::vec3 buttonColor = vec3(0.0f, 0.0f, 0.9f);
+	static glm::vec3 offset = vec3(0.1f, 0.1f, 0.1f);
+	vec3 color = buttonColor;
+	if (m_state == ButtonState::Focus)
+		color += offset;
+	else if (m_state == ButtonState::Clicked)
+		color -= offset;
 
-	//计算TextView位置
-	//默认居中
-	ivec2 texPosition;
-	int offsetX = m_width - dimension.x;
-	int offsetY = m_height - dimension.y;
-	texPosition.x = (offsetX > 0 ? offsetX : 0) / 2.0 + m_position.x;
-	texPosition.y = (offsetY > 0 ? offsetY : 0) / 2.0 + m_position.y;
-	m_text->RePosition(texPosition);
-	m_drawer = new ButtonDrawer(this);
+	ivec2 position = GetAbsolutePosition();
+	paint->DrawRect(position, m_width, m_height, color);
+	TextView::OnDraw(paint);
 }
 
 bool Button::DispatchEvent(Event & ievent)
@@ -170,41 +172,34 @@ bool Button::DispatchEvent(Event & ievent)
 }
 
 
-TextView::TextView(const string &id, vec2 position, string string, int fontSize, vec3 color) : View(id, position, 0, 0), m_str(string)
-{
-	int width, height;
-	FontRender::GetDimension(m_str, width, height);
-	ReSize(width, height);
-	m_fontSize = fontSize;
-	m_drawer = new TextViewDrawer(this);
-}
 
-ClipBar::ClipBar(string id, float len, vec2 position, int width, int height) : View(id, position, width, height)
+ClipBar::ClipBar(string id, float len, ivec2 position, int width, int height) : View(id, position, width, height)
 {
 	m_length = len;
 	m_start = 0;
 	m_end = m_length - 1;
 	char tex[20];
 	sprintf(tex, "Length: %.2f", len);
-	m_lenText = new TextView(id, vec2(ClipBarMeasure::m_leftOffset, ClipBarMeasure::m_lenToTop), tex, 16);
-	m_lenText->ReFatherPosition(ivec2(position.x, position.y));
+	m_lenText = new TextView("", ivec2(ClipBarMeasure::m_leftOffset, ClipBarMeasure::m_lenToTop), tex);
+	m_lenText->SetParentView(this);
 	sprintf(tex, "Start: %d", 0);
-	m_startText = new TextView(id, vec2(ClipBarMeasure::m_leftOffset, m_lenText->GetPositionY() + m_lenText->GetHeight() + ClipBarMeasure::m_startToLenDistence), tex, 16);
-	m_startText->ReFatherPosition(ivec2(position.x, position.y));
+	m_startText = new TextView("", ivec2(ClipBarMeasure::m_leftOffset, m_lenText->GetPositionY() + m_lenText->GetHeight() + ClipBarMeasure::m_startToLenDistence), tex);
+	m_startText->SetParentView(this);
 	sprintf(tex, "End: %.2f", len - 1);
-	m_endText = new TextView(id, vec2(0, m_startText->GetPositionY()), tex, 16);
-	m_endText->RePositionX(width - m_endText->GetWidth() - ClipBarMeasure::m_rightOffset);
-	m_endText->ReFatherPosition(ivec2(position.x, position.y));
-	m_startButton = new Button(id, vec2(ClipBarMeasure::m_leftOffset - ClipBarMeasure::m_slideLen / 2.0, height - ClipBarMeasure::m_slideLen - ClipBarMeasure::m_slideToBottom), ClipBarMeasure::m_slideLen, ClipBarMeasure::m_slideLen);
-	m_startButton->ReFatherPosition(ivec2(position.x, position.y));
+	m_endText = new TextView(id, ivec2(0, m_startText->GetPositionY()), tex);
+	m_endText->SetPositionX(width - m_endText->GetWidth() - ClipBarMeasure::m_rightOffset);
+	m_endText->SetParentView(this);
+	m_startButton = new Button("ClipBar.StartButton", ivec2(ClipBarMeasure::m_leftOffset - ClipBarMeasure::m_slideLen / 2.0, height - ClipBarMeasure::m_slideLen - ClipBarMeasure::m_slideToBottom), "", ClipBarMeasure::m_slideLen, ClipBarMeasure::m_slideLen);
+	m_startButton->SetParentView(this);
 	m_minPositionX = m_startButton->GetPositionX();
-	m_endButton = new Button(id, vec2(ClipBarMeasure::m_leftOffset + ClipBarMeasure::m_axisLen - ClipBarMeasure::m_slideLen / 2.0, m_startButton->GetPositionY()), ClipBarMeasure::m_slideLen, ClipBarMeasure::m_slideLen);
-	m_endButton->ReFatherPosition(ivec2(position.x, position.y));
+	m_endButton = new Button("ClipBar.EndButton", vec2(ClipBarMeasure::m_leftOffset + ClipBarMeasure::m_axisLen - ClipBarMeasure::m_slideLen / 2.0, m_startButton->GetPositionY()), "", ClipBarMeasure::m_slideLen, ClipBarMeasure::m_slideLen);
+	m_endButton->SetParentView(this);
 	m_maxPositionX = m_endButton->GetPositionX();
 	ClipButtonListener *listener = new ClipButtonListener(this);
 	m_startButton->SetMouseListener(listener);
 	m_endButton->SetMouseListener(listener);
-	m_drawer = new ClipBarDrawer(this);
+	m_axisPosition.x = ClipBarMeasure::m_leftOffset;
+	m_axisPosition.y = m_startText->GetPositionY() + m_startText->GetHeight() + ClipBarMeasure::m_axisToStart;
 }
 
 void ClipBar::SetStartValue(float value)
@@ -223,6 +218,23 @@ void ClipBar::SetEndValue(float value)
 	m_endText->SetText(str);
 }
 
+void ClipBar::OnDraw(Tiny2D * paint)
+{
+	ivec2 rt = GetAbsolutePosition();
+	paint->DrawRoundRect(rt, m_width, m_height, 15, vec3(0.7f, 0.1f, 0.2f));
+	rt.x += m_axisPosition.x;
+	rt.y += m_axisPosition.y;
+	paint->DrawLine(vec2(rt.x, rt.y), vec2(rt.x + ClipBarMeasure::m_axisLen, rt.y));
+	paint->DrawLine(vec2(rt.x, rt.y - 5), vec2(rt.x, rt.y + 5));
+	paint->DrawLine(vec2(rt.x + ClipBarMeasure::m_axisLen, rt.y - 5), vec2(rt.x + ClipBarMeasure::m_axisLen, rt.y + 5));
+	
+	m_startText->OnDraw(paint);
+	m_endText->OnDraw(paint);
+	m_lenText->OnDraw(paint);
+	m_startButton->OnDraw(paint);
+	m_endButton->OnDraw(paint);
+}
+
 bool ClipBar::DispatchEvent(Event & ievent)
 {
 	if (!View::DispatchEvent(ievent))
@@ -238,40 +250,40 @@ bool ClipBar::DispatchEvent(Event & ievent)
 	return true;
 }
 
-ListView::ListView(string id, vec2 position, int width, int height) : View(id, position, width, height)
-{
-	m_drawer = new ListViewDrawer(this);
-}
-
-void ListView::AddItem(ListItem * item)
-{
-	if (item == nullptr)
-		return;
-	ivec2 fPosition = GetAbsolutePosition();
-	item->ReFatherPosition(fPosition);
-	item->ReSize(m_width, 60);
-	item->RePosition(ivec2(0, 0));
-	m_items.push_back(item);
-}
-
-ClipItem::ClipItem(string clipName, float start, float end)
-{
-	m_clipName = clipName;
-	m_start = start;
-	m_end = end;
-
-	char str[20];
-	m_texClip = new TextView(m_id, vec2(0, 0), clipName, 16);
-	m_texClip->ReFatherPosition(m_position);
-	sprintf(str, "Start:%f", m_start);
-	m_texStart = new TextView(m_id, vec2(0, m_texClip->GetHeight()), str, 16);
-	m_texStart->ReFatherPosition(m_position);
-	sprintf(str, "Start:%f", m_end);
-	m_texEnd = new TextView(m_id, vec2(m_texStart->GetWidth() + 20, m_texClip->GetHeight()), str, 16);
-	m_texStart->ReFatherPosition(m_position);
-	m_drawer = new ClipItemDrawer(this);
-}
-
-ListItem::ListItem(string id, vec2 position, int width, int height) : View(id, position, width, height)
-{
-}
+//ListView::ListView(string id, vec2 position, int width, int height) : View(id, position, width, height)
+//{
+//	
+//}
+//
+//void ListView::AddItem(ListItem * item)
+//{
+//	if (item == nullptr)
+//		return;
+//	ivec2 fPosition = GetAbsolutePosition();
+//	item->ReFatherPosition(fPosition);
+//	item->ReSize(m_width, 60);
+//	item->RePosition(ivec2(0, 0));
+//	m_items.push_back(item);
+//}
+//
+//ClipItem::ClipItem(string clipName, float start, float end)
+//{
+//	m_clipName = clipName;
+//	m_start = start;
+//	m_end = end;
+//
+//	char str[20];
+//	m_texClip = new TextView(m_id, vec2(0, 0), clipName, 16);
+//	m_texClip->ReFatherPosition(m_position);
+//	sprintf(str, "Start:%f", m_start);
+//	m_texStart = new TextView(m_id, vec2(0, m_texClip->GetHeight()), str, 16);
+//	m_texStart->ReFatherPosition(m_position);
+//	sprintf(str, "Start:%f", m_end);
+//	m_texEnd = new TextView(m_id, vec2(m_texStart->GetWidth() + 20, m_texClip->GetHeight()), str, 16);
+//	m_texStart->ReFatherPosition(m_position);
+//	m_drawer = new ClipItemDrawer(this);
+//}
+//
+//ListItem::ListItem(string id, vec2 position, int width, int height) : View(id, position, width, height)
+//{
+//}

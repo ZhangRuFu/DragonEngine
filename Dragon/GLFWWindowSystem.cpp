@@ -174,13 +174,12 @@ void GLFWWindowSystem::Start()
 
 void GLFWWindowSystem::Render()
 {
-	
-	if (m_engine)
+	if (m_engine && m_engine->GetGameState() == DragonEngine::GameState::Gaming)
 	{
 		m_engine->Move();
 		m_engine->Draw();
+		glfwSwapBuffers(m_window);
 	}
-	glfwSwapBuffers(m_window);
 }
 
 GLFWWindowSystem *GLFWWindowSystem::m_glfwInstance = nullptr;

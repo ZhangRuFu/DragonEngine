@@ -8,13 +8,13 @@
 #include <string>
 #include <map>
 #include <GLM\glm.hpp>
+#include "UIModel.h"
 
 using std::string;
 using std::map;
 
 class DragonEngine;
 class InputSystem;
-class UIManager;
 
 /*
 *	Event ÊÂ¼þ
@@ -48,13 +48,12 @@ struct Event
 	}
 };
 
-class WindowSystem
+class WindowSystem : public UIModel
 {
 protected:
 	static WindowSystem *m_instance;
 	DragonEngine *m_engine;
 	InputSystem *m_input;
-	UIManager *m_uiManager;
 	int m_windowWidth;
 	int m_windowHeight;
 	int m_frameWidth;
@@ -65,17 +64,15 @@ protected:
 
 public:
 	WindowSystem(int width, int height, string windowName);
-
-public:
 	void GetFrameSize(int &frameWidth, int &frameHeight);
-	void AssignEngine(DragonEngine *engine);
 	void AssignInput(InputSystem *input);
+	void AssginEngine(DragonEngine *engine);
 	static void GetWindowSize(int &frameWidth, int &frameHeight);
 
 public:
-	virtual void Render() = 0;
 	virtual void Start() = 0;
+	virtual void Render() = 0;
+	virtual void AddActivity(Activity *activity);
 	void MouseEvent(int x, int y, MouseMotion mouseMotion);
 	void KeyEvent(int key, KeyMotion keyMotion);
-	void InitUI(void);
 };
