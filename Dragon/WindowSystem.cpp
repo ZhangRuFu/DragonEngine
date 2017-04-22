@@ -24,16 +24,11 @@ void WindowSystem::AssginEngine(DragonEngine * engine)
 	m_engine = engine;
 }
 
-void WindowSystem::GetWindowSize(int &frameWidth, int &frameHeight)
-{
-	m_instance->GetFrameSize(frameWidth, frameHeight);
-}
-
-
 void WindowSystem::AddActivity(Activity * activity)
 {
 	UIModel::AddActivity(activity);
 	activity->OnMeasure(m_frameWidth, m_frameHeight);
+	activity->OnPosit(0, 0);
 }
 
 void WindowSystem::MouseEvent(int x, int y, MouseMotion mouseMotion)
@@ -66,7 +61,6 @@ void WindowSystem::KeyEvent(int key, KeyMotion keyMotion)
 	GetActive()->AcceptEvent(key, keyMotion);
 }
 
-WindowSystem * WindowSystem::m_instance = nullptr;
 
 Event::Event(void) : m_mousePosition(0, 0), m_mouseMotion(MouseMotion::NoughtMouse), m_keyMotion(KeyMotion::NoughtKey), m_keyCode(0) 
 {

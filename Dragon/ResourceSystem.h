@@ -15,6 +15,8 @@
 
 using std::list;
 
+class DragonEngine;
+
 class ResourceSystem
 {
 private:
@@ -27,12 +29,13 @@ private:
 	list<Light*> m_lightList;
 	MeshManager *m_meshManager;
 	TextureManager *m_textureManager;
+	DragonEngine *m_engine;
 
 private:
-	ResourceSystem();
+	ResourceSystem(DragonEngine *engine);
 
 public:
-	static ResourceSystem* GetInstance(void);
+	static ResourceSystem* GetInstance(DragonEngine *engine);
 	static void Register(GameEntity* entity);
 	static void Register(GameSpirit *spirit);
 	static void Register(Camera *camera);

@@ -2,11 +2,11 @@
 #include "ResourceSystem.h"
 #include "Camera.h"
 #include "CommonType.h"
-#include "WindowSystem.h"
 
-Camera::Camera(Transform transform, vec3 front, vec3 up) : GameSpirit(transform), m_front(front), m_up(up)
+Camera::Camera(int windowWidth, int windowHeight, Transform transform, vec3 front, vec3 up) : GameSpirit(transform), m_front(front), m_up(up)
 {
-	WindowSystem::GetWindowSize(m_windowWidth, m_windowHeight);
+	m_windowWidth = windowWidth;
+	m_windowHeight = windowHeight;
 
 	m_speed = m_defaultSpeed;
 	m_sensitivety = m_defaultSensitivety;

@@ -1,20 +1,22 @@
 #include "ResourceSystem.h"
+#include "DragonEngine.h"
 #include <iostream>
 using std::cout;
 using std::endl;
 
-ResourceSystem::ResourceSystem()
+ResourceSystem::ResourceSystem(DragonEngine *engine)
 {
+	m_engine = engine;
 	m_meshManager = MeshManager::GetInstance();
 	m_textureManager = TextureManager::GetInstance();
 	if (m_meshManager && m_textureManager)
 		cout << "DragonEngine->SUCCESS:资源系统初始化成功!" << endl;
 }
 
-ResourceSystem * ResourceSystem::GetInstance(void)
+ResourceSystem * ResourceSystem::GetInstance(DragonEngine *engine)
 {
 	if (m_instance == nullptr)
-		m_instance = new ResourceSystem();
+		m_instance = new ResourceSystem(engine);
 	return m_instance;
 }
 

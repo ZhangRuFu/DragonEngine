@@ -17,11 +17,11 @@ DragonEngine::DragonEngine(void)
 	string windowName = "Dragon Engine 0.1";
 	int frameWidth, frameHeight;
 	m_gameState = GameState::PreStart;
-	m_windowSystem = new GLFWWindowSystem(700, 700, windowName);
+	m_windowSystem = GLFWWindowSystem::GetInstance(700, 700, windowName);
 	m_windowSystem->AssginEngine(this);
 	m_windowSystem->GetFrameSize(frameWidth, frameHeight);
 	m_renderSystem = RenderSystem::GetInstance(this, frameWidth, frameHeight);
-	m_resourceSystem = ResourceSystem::GetInstance();
+	m_resourceSystem = ResourceSystem::GetInstance(this);
 	m_inputSystem = InputSystem::GetInstance();
 	m_windowSystem->AssignInput(m_inputSystem);
 	m_time = new Time();
@@ -58,7 +58,9 @@ void DragonEngine::Init()
 {
 	DragonActivity *activity = new DragonActivity("DragonActivity");
 	m_windowSystem->AddActivity(activity);
-	Camera *m_camera = new Camera();
+	int frameWidth, frameHeight;
+	m_windowSystem->GetFrameSize(frameWidth, frameHeight);
+	Camera *m_camera = new Camera(frameWidth, frameHeight);
 	Soldier *soldier = new Soldier();
 	//Monster *monster = new Monster();
 	WoodPlane *woodPlane = new WoodPlane();

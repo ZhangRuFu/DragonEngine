@@ -62,6 +62,7 @@ public:
 	//虚函数
 	virtual bool DispatchEvent(Event &ievent);						//事件分发
 	virtual void OnMeasure(int fatherWidth, int fatherHeight);		//尺寸测定
+	virtual void OnPosit(int fatherX, int fatherY);					//位置测定
 	virtual void OnDraw(Tiny2D *paint) = 0;							//绘制
 	virtual void RequestMeasure(void) { OnMeasure(m_parentView->GetWidth(), m_parentView->GetHeight()); }
 
@@ -84,6 +85,7 @@ public:
 	
 	string GetViewID(void) { return m_id; }
 	void SetParentView(View *parent);
+	bool HitView(Event & ievent);
 
 	//事件监听
 	void SetMouseListener(MouseListener *mouseListener) { m_mouseListener = mouseListener; }
@@ -108,6 +110,7 @@ public:
 	ViewGroup(const string id, ivec2 position, int width, int height) : View(id, position, width, height) {}
 	virtual bool DispatchEvent(Event &ievent);						//事件分发
 	virtual void OnMeasure(int fatherWidth, int fatherHeight);		//尺寸测定
+	virtual void OnPosit(int fatherX, int fatherY);					//位置测定
 	virtual void OnDraw(Tiny2D *paint);								//绘制
 	void AddView(View *view);
 	View* FindViewByID(string id);
@@ -130,16 +133,13 @@ class TextView : public View
 {
 public:
 	enum TextAligin{Top = 1, Bottom = 2, Left = 4, Right = 8, Center = 15};
-	
-private:
-	const int LRPadding = 15;
-	const int TBPadding = 10;
 
 protected:
 	string m_text;
 	int m_fontSize;
 	vec3 m_fontColor;
 	ivec2 m_fontPosition;
+	int m_texWidth, m_texHeight;
 	TextAligin m_texAlign;
 
 public:
@@ -147,6 +147,7 @@ public:
 
 	//Override
 	virtual void OnMeasure(int fatherWidth, int fatherHeight);
+	virtual void OnPosit(int fatherX, int fatherY);
 	virtual void OnDraw(Tiny2D *paint);
 
 	string GetText(void) const { return m_text; }
@@ -173,12 +174,16 @@ class Button : public TextView
 {
 private:
 	ButtonState m_state;
+	const int LRPadding = 15;
+	const int TBPadding = 10;
 
 public:
 	Button(const string &id, ivec2 position, string text, int width = View::Dimension::WRAP_CONTENT, int height = View::Dimension::WRAP_CONTENT);
 	
 	//Override
 	virtual void OnDraw(Tiny2D *paint);
+	virtual void OnPosit(int fatherX, int fatherY);
+	virtual void OnMeasure(int fatherWidth, int fatherHeight);
 	virtual bool DispatchEvent(Event &ievent);
 
 	ButtonState GetButtonState(void) const { return m_state; }
@@ -221,6 +226,8 @@ public:
 
 	//Override
 	virtual void OnDraw(Tiny2D *paint);
+	virtual void OnMeasure(int fatherWidth, int fatherHeight);
+	virtual void OnPosit(int fatherWidth, int fatherHeight);
 	virtual bool DispatchEvent(Event &ievent);
 
 private:
@@ -276,37 +283,76 @@ private:
 	};
 };
 
-//class ListItem : public View
-//{
-//public:
-//	ListItem(string id = "item", vec2 position = vec2(0, 0), int width = 0, int height = 0);
-//};
-//
-//class ClipItem : public ListItem
-//{
-//private:
-//	string m_clipName;
-//	float m_start;
-//	float m_end;
-//
-//	TextView *m_texClip;
-//	TextView *m_texStart;
-//	TextView *m_texEnd;
-//
-//public:
-//	ClipItem(string clipName, float start, float end);
-//	const TextView* GetClipNameTextView(void) { return m_texClip; }
-//	const TextView* GetStartTextView(void) { return m_texStart; }
-//	const TextView* GetEndTextView(void) { return m_texEnd; }
-//};
-//
-//class ListView : public View
-//{
-//private:
-//	list<ListItem*> m_items;
-//
-//public:
-//	ListView(string id, vec2 position, int width = 200, int height = 400);
-//	void AddItem(ListItem* item);
-//	list<ListItem*> GetItems(void) const { return m_items; }
-//};
+
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ListItem
+*	描　　述：ListView中Item的基类
+*
+*/
+class ListItem : public View
+{
+public:
+	ListItem(string id = "", ivec2 position = vec2(0, 0), int width = View::Dimension::MATCH_PARENT, int height = View::Dimension::WRAP_CONTENT) : View(id, position, width, height) {};
+};
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ClipItem
+*	描　　述：存放片段数据的ListItem
+*
+*/
+class ClipItem : public ListItem
+{
+private:
+	string m_clipName;
+	float m_start;
+	float m_end;
+
+	static const int Interval = 10;
+	static const int LeftPadding = 10;
+	static const int RightPadding = 10;
+	static const int TopPadding = 10;
+	static const int BottomPadding = 10;
+
+	TextView *m_texClip;
+	TextView *m_texStart;
+	TextView *m_texEnd;
+
+public:
+	ClipItem(string clipName, float start, float end);
+
+	//Override
+	virtual void OnDraw(Tiny2D *paint);
+	virtual void OnMeasure(int fatherWidth, int fatherHeight);
+	virtual void OnPosit(int fatherWidth, int fatherHeight);
+};
+
+/*
+*
+*	引擎版本：Dragon Engine v0.1;
+*	类　　名：ListView
+*	描　　述：列表视图
+*
+*/
+class ListView : public View
+{
+	static const int LRPadding = 5;
+	static const int TBPadding = 5;
+private:
+	list<ListItem*> m_items;
+
+public:
+	ListView(string id, ivec2 position, int width = 200, int height = 400);
+	void AddItem(ListItem* item);
+	list<ListItem*> GetItems(void) const { return m_items; }
+
+	//Override
+	virtual void OnDraw(Tiny2D *paint);
+	virtual void OnMeasure(int fatherWidth, int fatherHeight);
+	virtual void OnPosit(int fatherWidth, int fatherHeight);
+	virtual bool DispatchEvent(Event &ievent);
+};

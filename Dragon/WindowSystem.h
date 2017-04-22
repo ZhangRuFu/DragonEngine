@@ -51,7 +51,6 @@ struct Event
 class WindowSystem : public UIModel
 {
 protected:
-	static WindowSystem *m_instance;
 	DragonEngine *m_engine;
 	InputSystem *m_input;
 	int m_windowWidth;
@@ -67,7 +66,6 @@ public:
 	void GetFrameSize(int &frameWidth, int &frameHeight);
 	void AssignInput(InputSystem *input);
 	void AssginEngine(DragonEngine *engine);
-	static void GetWindowSize(int &frameWidth, int &frameHeight);
 
 public:
 	virtual void Start() = 0;
