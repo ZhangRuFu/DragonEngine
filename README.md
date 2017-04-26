@@ -22,4 +22,4 @@
 
 ---
 
-![Engine](https://github.com/ZhangRuFu/DragonEngine/blob/New_UI_Frame/Introduction/2017年4月22日.png)
+![Engine](https://raw.githubusercontent.com/ZhangRuFu/DragonEngine/New_UI_Frame/Introduction/2017年4月26日.png)
