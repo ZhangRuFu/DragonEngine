@@ -13,6 +13,7 @@ using glm::ivec2;
 
 class Tiny2D;
 class View;
+class Activity;
 
 /*
 *	MouseListener 鼠标监听器
@@ -41,6 +42,7 @@ public:
 
 class View
 {
+	enum InvalidateType{ LayoutInvalidate = 0x01, MeasureInvalidate = 0x02};
 public:
 	enum Dimension{MATCH_PARENT = -2, WRAP_CONTENT = -1};
 
@@ -50,21 +52,22 @@ protected:
 	ivec2 m_fatherPosition;						//父级View位置
 	int m_layoutWidth, m_layoutHeight;			//布局参数
 	int m_width, m_height;						//宽、高
+	unsigned char m_invalidateState;			//无效状态
 	View *m_parentView;							//父级视图
+	Activity *m_activity;						//所属Activity
 
 	//监听器
 	MouseListener *m_mouseListener;
 	KeyBoardListener *m_keyListener;
 
 public:
-	View(const string &id, ivec2 &position, int layoutWidth, int layoutHeight);
+	View(Activity *activity, const string &id, ivec2 &position, int layoutWidth, int layoutHeight);
 	
 	//虚函数
 	virtual bool DispatchEvent(Event &ievent);						//事件分发
 	virtual void OnMeasure(int fatherWidth, int fatherHeight);		//尺寸测定
 	virtual void OnPosit(int fatherX, int fatherY);					//位置测定
 	virtual void OnDraw(Tiny2D *paint) = 0;							//绘制
-	virtual void RequestMeasure(void) { OnMeasure(m_parentView->GetWidth(), m_parentView->GetHeight()); }
 
 	//位置
 	void SetFatherPosition(ivec2 fatherPosition) { m_fatherPosition = fatherPosition; }
@@ -86,6 +89,15 @@ public:
 	string GetViewID(void) { return m_id; }
 	void SetParentView(View *parent);
 	bool HitView(Event & ievent);
+	Activity* GetActivity(void) { return m_activity; }
+	void RequestFocus(void);
+
+	//区域无效
+	void SetMeasureInvalidate(void) { m_invalidateState |= InvalidateType::MeasureInvalidate; }
+	void SetLayoutInvalidate(void) { m_invalidateState |= InvalidateType::LayoutInvalidate; }
+	bool isMeasureInvalidate(void) { return ((m_invalidateState & InvalidateType::MeasureInvalidate) != 0); }
+	bool isLayoutInvalidate(void) { return ((m_invalidateState & InvalidateType::LayoutInvalidate) != 0); }
+	void Invalidate(View *invalidateView);
 
 	//事件监听
 	void SetMouseListener(MouseListener *mouseListener) { m_mouseListener = mouseListener; }
@@ -107,7 +119,7 @@ protected:
 
 public:
 	//ViewGroup的宽度和高度不能为WRAP_CONTENT
-	ViewGroup(const string id, ivec2 position, int width, int height) : View(id, position, width, height) {}
+	ViewGroup(Activity *activity, const string id, ivec2 position, int width, int height) : View(activity, id, position, width, height) {}
 	virtual bool DispatchEvent(Event &ievent);						//事件分发
 	virtual void OnMeasure(int fatherWidth, int fatherHeight);		//尺寸测定
 	virtual void OnPosit(int fatherX, int fatherY);					//位置测定
@@ -143,7 +155,7 @@ protected:
 	TextAligin m_texAlign;
 
 public:
-	TextView(const string id, ivec2 position, string text, int width = Dimension::WRAP_CONTENT, int height = Dimension::WRAP_CONTENT, TextAligin texAlign = TextAligin::Center, vec3 color = vec3(1.0, 1.0, 1.0), int fontSize = 16);
+	TextView(Activity *activity, const string id, ivec2 position, string text, int width = Dimension::WRAP_CONTENT, int height = Dimension::WRAP_CONTENT, TextAligin texAlign = TextAligin::Center, vec3 color = vec3(1.0, 1.0, 1.0), int fontSize = 16);
 
 	//Override
 	virtual void OnMeasure(int fatherWidth, int fatherHeight);
@@ -151,13 +163,29 @@ public:
 	virtual void OnDraw(Tiny2D *paint);
 
 	string GetText(void) const { return m_text; }
-	void SetText(string text) { m_text = text; }
+	void SetText(string text) { m_text = text; SetMeasureInvalidate(); Invalidate(this); }
 	vec3 GetFontColor(void) const { return m_fontColor; }
 	void SetFontColor(vec3 color) { m_fontColor = color; }
 	int GetFontSize(void) const { return m_fontSize; }
-	void SetFontSize(int fontSize) { m_fontSize = fontSize; }
+	void SetFontSize(int fontSize) { m_fontSize = fontSize; SetMeasureInvalidate(); Invalidate(this); }
 	TextAligin GetTextAlign(void) { return m_texAlign; }
-	void SetTextAlign(TextAligin texAlign) { m_texAlign = texAlign; }
+	void SetTextAlign(TextAligin texAlign) { m_texAlign = texAlign; SetLayoutInvalidate(); Invalidate(this); }
+};
+
+class EditText : public TextView
+{
+public:
+	EditText(Activity *activity, const string id, ivec2 position, string text = "", int width = Dimension::WRAP_CONTENT, int height = Dimension::WRAP_CONTENT, TextAligin texAlign = TextAligin::Center, vec3 color = vec3(1.0, 1.0, 1.0), int fontSize = 16);
+
+	//Override
+	virtual void OnDraw(Tiny2D *paint);
+	virtual bool DispatchEvent(Event &ievent);
+	virtual void OnMeasure(int fatherWidth, int fatherHeight);
+	virtual void OnPosit(int fatherX, int fatherY);
+
+private:
+	static const int TBPadding = 5;
+	static const int LRPadding = 10;
 };
 
 /*
@@ -178,7 +206,7 @@ private:
 	const int TBPadding = 10;
 
 public:
-	Button(const string &id, ivec2 position, string text, int width = View::Dimension::WRAP_CONTENT, int height = View::Dimension::WRAP_CONTENT);
+	Button(Activity *activity, const string &id, ivec2 position, string text, int width = View::Dimension::WRAP_CONTENT, int height = View::Dimension::WRAP_CONTENT);
 	
 	//Override
 	virtual void OnDraw(Tiny2D *paint);
@@ -213,7 +241,7 @@ public:
 class ClipBar : public View
 {
 public:
-	ClipBar(string id, float len, ivec2 position, int width = 250, int height = 120);		//构造函数
+	ClipBar(Activity *activity, string id, float len, ivec2 position, int width = 250, int height = 120);		//构造函数
 	float GetStartValue(void) { return m_start; }
 	float GetEndValue(void) { return m_end; }
 	void SetStartValue(float value);
@@ -295,7 +323,7 @@ private:
 class ListItem : public View
 {
 public:
-	ListItem(string id = "", ivec2 position = vec2(0, 0), int width = View::Dimension::MATCH_PARENT, int height = View::Dimension::WRAP_CONTENT) : View(id, position, width, height) {};
+	ListItem(Activity *activity, string id = "", ivec2 position = vec2(0, 0), int width = View::Dimension::MATCH_PARENT, int height = View::Dimension::WRAP_CONTENT) : View(activity, id, position, width, height) {};
 };
 
 /*
@@ -323,7 +351,7 @@ private:
 	TextView *m_texEnd;
 
 public:
-	ClipItem(string clipName, float start, float end);
+	ClipItem(Activity *activity, string clipName, float start, float end);
 
 	//Override
 	virtual void OnDraw(Tiny2D *paint);
@@ -346,7 +374,7 @@ private:
 	list<ListItem*> m_items;
 
 public:
-	ListView(string id, ivec2 position, int width = 200, int height = 400);
+	ListView(Activity *activity, string id, ivec2 position, int width = 200, int height = 400);
 	void AddItem(ListItem* item);
 	list<ListItem*> GetItems(void) const { return m_items; }
 

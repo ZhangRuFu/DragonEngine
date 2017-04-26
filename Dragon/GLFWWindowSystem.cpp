@@ -111,6 +111,7 @@ GLFWWindowSystem::GLFWWindowSystem(int width, int height, string windowName) : W
 	glfwSetMouseButtonCallback(m_window, MouseEvent);
 	glfwSetCursorPosCallback(m_window, MouseMoveEvent);
 	glfwSetWindowRefreshCallback(m_window, Render);
+	glfwSetCharCallback(m_window, CharEvent);
 }
 
 void GLFWWindowSystem::KeyEvent(GLFWwindow *window, int key, int scancode, int action, int mode)
@@ -153,6 +154,12 @@ void GLFWWindowSystem::MouseEvent(GLFWwindow *window, int button, int action, in
 void GLFWWindowSystem::MouseMoveEvent(GLFWwindow *window, double x, double y)
 {
 	m_glfwInstance->WindowSystem::MouseEvent((int)x, (int)y, MouseMotion::MouseMove);
+}
+
+void GLFWWindowSystem::CharEvent(GLFWwindow * window, unsigned int codepoint)
+{
+	//GLFW的字符输入事件
+	m_glfwInstance->WindowSystem::CharEvent(codepoint);
 }
 
 void GLFWWindowSystem::Render(GLFWwindow * window)

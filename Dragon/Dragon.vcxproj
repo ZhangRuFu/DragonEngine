@@ -160,6 +160,7 @@
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MathUtility.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="MeshLoader.cpp" />
     <ClCompile Include="MeshLoaderFactory.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="GLFWWindowSystem.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="Light.h" />
+    <ClInclude Include="MathUtility.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="MeshLoader.h" />
     <ClInclude Include="MeshLoaderFactory.h" />

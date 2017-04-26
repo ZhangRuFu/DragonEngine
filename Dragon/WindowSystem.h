@@ -32,9 +32,17 @@ struct Event
 
 	//KeyBoard
 	KeyMotion m_keyMotion;
-	int m_keyCode;
+	int m_keyCode;					//Key
+	unsigned int m_codePoint;		//UTF-32
+
+	bool m_hasCharMsg;
+	bool m_hasKeyMsg;
+	bool m_hasMouseMsg;
 
 	Event(void);
+	Event(int keyCode, KeyMotion keyMotion);
+	Event(unsigned int codePoint);
+	Event(glm::ivec2 mousePosition, MouseMotion mouseMotion);
 	bool isMouseKeyDown(void)
 	{
 		static const bool isDown[]{ false, true, false, true, false, false };
@@ -73,4 +81,5 @@ public:
 	virtual void AddActivity(Activity *activity);
 	void MouseEvent(int x, int y, MouseMotion mouseMotion);
 	void KeyEvent(int key, KeyMotion keyMotion);
+	void CharEvent(unsigned int codepoint);
 };

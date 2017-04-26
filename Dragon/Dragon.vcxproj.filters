@@ -150,6 +150,9 @@
     <ClCompile Include="UIModel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MathUtility.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Entity.h">
@@ -253,6 +256,9 @@
     </ClInclude>
     <ClInclude Include="Activity.h">
       <Filter>头文件\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="MathUtility.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -89,9 +89,12 @@ void RenderSystem::Draw()
 	}
 
 	//UI»æÖÆ
+	glClearDepth(0.5);
+	glClear(GL_DEPTH_BUFFER_BIT);
 	m_paint->Drawer::GetShader()->Use();
 	m_paint->PublicSet();
 	m_engine->GetWindowSystem()->GetActive()->OnDraw(m_paint);
+	glClearDepth(1.0);
 }
 
 void RenderSystem::ReSize(int frameWidth, int frameHeight)

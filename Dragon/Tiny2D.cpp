@@ -16,8 +16,8 @@ Tiny2D::Tiny2D(string shaderName) : Drawer(shaderName)
 void Tiny2D::DrawLine(vec2 start, vec2 end, vec3 color, int width)
 {
 	static vec3 point[2];
-	point[0] = vec3(start.x, -start.y, 0.0f);
-	point[1] = vec3(end.x, -end.y, 0.0f);
+	point[0] = vec3(start.x, -start.y, m_depth);
+	point[1] = vec3(end.x, -end.y, m_depth);
 	glLineWidth(width);
 	glBindBuffer(GL_ARRAY_BUFFER, Drawer::m_buffers->m_vbo[Shape::Basic2D::Line]);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec3) * 2, &point);
@@ -33,7 +33,7 @@ void Tiny2D::DrawLine(vec2 start, vec2 end, vec3 color, int width)
 
 void Tiny2D::DrawTriangle(vec2 lt, int width, int height, vec3 color)
 {
-	glm::mat4 model = translate(vec3(lt.x, -lt.y, 0.0f));
+	glm::mat4 model = translate(vec3(lt.x, -lt.y, m_depth));
 	model = scale(model, vec3(width, height, 1.0f));
 	Drawer::m_shader->SetUniformValue("model", model);
 	glUniform3fv(Drawer::m_shader->GetUniformLocation("color"), 1, value_ptr(color));
@@ -44,7 +44,7 @@ void Tiny2D::DrawTriangle(vec2 lt, int width, int height, vec3 color)
 
 void Tiny2D::DrawRect(vec2 rt, int width, int height, vec3 color)
 {
-	glm::mat4 model = translate(vec3(rt.x, -rt.y, 0.0f));
+	glm::mat4 model = translate(vec3(rt.x, -rt.y, m_depth));
 	model = scale(model, vec3(width, height, 1.0f));
 	Drawer::m_shader->SetUniformValue("model", model);
 	glUniform3fv(Drawer::m_shader->GetUniformLocation("color"), 1, value_ptr(color));
@@ -56,13 +56,13 @@ void Tiny2D::DrawRect(vec2 rt, int width, int height, vec3 color)
 void Tiny2D::DrawText(const string &str, vec2 positioin, int fontSize, vec3 color)
 {
 	FontRender::m_shader->Use();
-	FontRender::DrawText(str, positioin, fontSize, color);
+	FontRender::DrawText(str, positioin, fontSize, color, m_depth);
 	Drawer::m_shader->Use();
 }
 
 void Tiny2D::DrawCircle(vec2 lt, int radius, vec3 color)
 {
-	glm::mat4 model = translate(vec3(lt.x, -lt.y, 0.0f));
+	glm::mat4 model = translate(vec3(lt.x, -lt.y, m_depth));
 	model = scale(model, vec3(radius, radius, 1.0f));
 	Drawer::m_shader->SetUniformValue("model", model);
 	glUniform3fv(Drawer::m_shader->GetUniformLocation("color"), 1, value_ptr(color));
@@ -84,7 +84,7 @@ void Tiny2D::DrawRoundRect(vec2 lt, int width, int height, int radius, vec3 colo
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec3) * m_shapes->GetVertexCount(Shape::Basic2D::RoundedRect), m_shapes->GetRoundedRectData(width, height, radius));
 	
 	//Drawer::m_shader->Use();
-	glm::mat4 model = translate(vec3(halfW + lt.x, -(halfH + lt.y), 0.0f));
+	glm::mat4 model = translate(vec3(halfW + lt.x, -(halfH + lt.y), m_depth));
 	Drawer::m_shader->SetUniformValue("model", model);
 	glUniform3fv(Drawer::m_shader->GetUniformLocation("color"), 1, value_ptr(color));
 	glBindVertexArray(Drawer::m_buffers->m_vao[Shape::Basic2D::RoundedRect]);
@@ -92,9 +92,29 @@ void Tiny2D::DrawRoundRect(vec2 lt, int width, int height, int radius, vec3 colo
 	glBindVertexArray(0);
 }
 
+void Tiny2D::EnableModel(DrawModel drawModel)
+{
+	switch (drawModel)
+	{
+	case DrawModel::FORCE_DEPTH:
+		//设置强制通过深度测试
+		glDepthFunc(GL_ALWAYS);
+		break;
+	case DrawModel::NORMAL_DEPTH:
+		//正常深度测试
+		glDepthFunc(GL_LEQUAL);
+		break;
+	}
+}
+
+void Tiny2D::SetDepth(DrawDepth depth)
+{
+	m_depth = depth;
+}
+
 void Tiny2D::PublicSet()
 {
-	mat4 windowProjection = ResourceSystem::GetMainCamera()->GenWindowProjectionMatrix();
+	mat4 windowProjection = ResourceSystem::GetMainCamera()->GenWindowProjectionMatrix(10.0f, -10.0f);
 	Drawer::m_shader->SetUniformValue("projection", windowProjection);
 	FontRender::m_shader->Use();
 	FontRender::PublicSet();

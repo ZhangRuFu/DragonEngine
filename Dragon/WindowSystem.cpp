@@ -27,6 +27,7 @@ void WindowSystem::AssginEngine(DragonEngine * engine)
 void WindowSystem::AddActivity(Activity * activity)
 {
 	UIModel::AddActivity(activity);
+	activity->OnCreate();
 	activity->OnMeasure(m_frameWidth, m_frameHeight);
 	activity->OnPosit(0, 0);
 }
@@ -52,6 +53,7 @@ void WindowSystem::MouseEvent(int x, int y, MouseMotion mouseMotion)
 	GetActive()->AcceptEvent(ivec2(x, y), mouseMotion);
 }
 
+//按键事件-保存至InputSystem，供Entity使用
 void WindowSystem::KeyEvent(int key, KeyMotion keyMotion)
 {
 	if (keyMotion == KeyMotion::KeyDown)
@@ -61,8 +63,49 @@ void WindowSystem::KeyEvent(int key, KeyMotion keyMotion)
 	GetActive()->AcceptEvent(key, keyMotion);
 }
 
-
-Event::Event(void) : m_mousePosition(0, 0), m_mouseMotion(MouseMotion::NoughtMouse), m_keyMotion(KeyMotion::NoughtKey), m_keyCode(0) 
+//字符消息-分发至Activity，供UI使用
+void WindowSystem::CharEvent(unsigned int codepoint)
 {
+	GetActive()->AcceptEvent(codepoint);
+}
 
+Event::Event(void) : m_mousePosition(0, 0)
+{
+	m_mouseMotion = MouseMotion::NoughtMouse;
+	m_keyMotion = KeyMotion::NoughtKey;
+	m_codePoint = 0;
+	m_keyCode = 0;
+	m_hasCharMsg = false;
+	m_hasKeyMsg = false;
+}
+
+Event::Event(int keyCode, KeyMotion keyMotion)
+{
+	m_hasKeyMsg = true;
+	m_keyCode = keyCode;
+	m_keyMotion = keyMotion;
+
+	m_hasCharMsg = false;
+	m_hasMouseMsg = false;
+	m_codePoint = 0;
+}
+
+Event::Event(unsigned int codePoint)
+{
+	m_hasCharMsg = true;
+	m_codePoint = codePoint;
+
+	m_hasKeyMsg = m_hasMouseMsg = false;
+	m_keyCode = 0;
+
+}
+
+Event::Event(glm::ivec2 mousePosition, MouseMotion mouseMotion)
+{
+	m_hasMouseMsg = true;
+	m_mousePosition = mousePosition;
+
+	m_hasCharMsg = m_hasKeyMsg = false;
+	m_codePoint = 0;
+	m_keyCode = 0;
 }

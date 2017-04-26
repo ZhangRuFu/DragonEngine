@@ -41,7 +41,8 @@ public:
 
 	mat4 GenViewMatrix();
 	mat4 GenProjectionMatrix();
-	mat4 GenWindowProjectionMatrix();
+	mat4 GenWindowProjectionMatrix(float nearZ = 0.0f, float farZ = 0.0f);
+
 
 public:
 
