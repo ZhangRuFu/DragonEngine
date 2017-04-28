@@ -35,4 +35,8 @@ public:
 	void Start();
 
 	void Init();
+
+	WindowSystem *GetWindowSystem(void) { return m_windowSystem; }
+
+	GameState GetGameState(void) { return m_gameState; }
 };

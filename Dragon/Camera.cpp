@@ -2,11 +2,11 @@
 #include "ResourceSystem.h"
 #include "Camera.h"
 #include "CommonType.h"
-#include "WindowSystem.h"
 
-Camera::Camera(Transform transform, vec3 front, vec3 up) : GameSpirit(transform), m_front(front), m_up(up)
+Camera::Camera(int windowWidth, int windowHeight, Transform transform, vec3 front, vec3 up) : GameSpirit(transform), m_front(front), m_up(up)
 {
-	WindowSystem::GetWindowSize(m_windowWidth, m_windowHeight);
+	m_windowWidth = windowWidth;
+	m_windowHeight = windowHeight;
 
 	m_speed = m_defaultSpeed;
 	m_sensitivety = m_defaultSensitivety;
@@ -69,9 +69,9 @@ mat4 Camera::GenProjectionMatrix()
 	return perspective<float>(45, 1, 0.1, 5000);
 }
 
-mat4 Camera::GenWindowProjectionMatrix()
+mat4 Camera::GenWindowProjectionMatrix(float nearZ, float farZ)
 {
-	return ortho<float>(0, m_windowWidth, -m_windowHeight, 0);
+	return ortho<float>(0, m_windowWidth, -m_windowHeight, 0, nearZ, farZ);
 }
 
 

@@ -19,6 +19,8 @@ using std::list;
 using std::vector;
 using std::map;
 using std::string;
+class DragonEngine;
+class Tiny2D;
 
 /*
 *	引擎版本：Dragon Engine v0.1 - 2017年4月9日20:39:36
@@ -29,7 +31,7 @@ using std::string;
 class DrawerList
 {
 private:
-	int m_shaderIndex;				//shader索引
+	int m_shaderIndex;					//shader索引
 	list<Drawer*> m_drawerList;			//drawer列表
 
 public:
@@ -44,28 +46,27 @@ class RenderSystem
 	enum ShaderType { VertexShader = GL_VERTEX_SHADER, FragmentShader = GL_FRAGMENT_SHADER };
 
 private:
+	DragonEngine *m_engine;
 	int m_frameWidth;
 	int m_frameHeight;
 
 	vector<DrawerList> m_renderList;					//绘制队列
-
 	map<string, unsigned int> m_shaderMap;				//Shader资源	
 	vector<Shader*> m_shaders;
-
+	Tiny2D *m_paint;
 	static RenderSystem *m_instance;
 private:
-	RenderSystem(int frameWidth, int frameHeight);
-
-public:
-	static RenderSystem* GetInstance(int frameWidth = 500, int frameHeight = 500);
+	RenderSystem(DragonEngine *engine, int frameWidth, int frameHeight);
 
 public:
 	void Draw();
 	void ReSize(int frameWidth, int frameHeight);
+	void PostRender();
 	static void Register(Drawer *drawer);
 	static unsigned int CreateTexture(TextureInfo &info);
 	static unsigned int CreateCubeTexture(vector<TextureInfo> *info);
 	static Shader* LoadShader(string shaderName);
+	static RenderSystem* GetInstance(DragonEngine *engine, int frameWidth = 500, int frameHeight = 500);
 
 private:
 	bool Init(void);

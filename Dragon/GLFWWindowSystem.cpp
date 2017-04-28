@@ -27,8 +27,6 @@ GLFWWindowSystem::GLFWWindowSystem(int width, int height, string windowName) : W
 
 	glfwGetFramebufferSize(m_window, &m_frameWidth, &m_frameHeight);
 
-	m_instance = m_glfwInstance = this;
-
 	//键盘映射
 	m_keyMap[GLFW_KEY_APOSTROPHE] = KEY_OEM_7;
 	m_keyMap[GLFW_KEY_COMMA] = KEY_OEM_COMMA;
@@ -113,6 +111,7 @@ GLFWWindowSystem::GLFWWindowSystem(int width, int height, string windowName) : W
 	glfwSetMouseButtonCallback(m_window, MouseEvent);
 	glfwSetCursorPosCallback(m_window, MouseMoveEvent);
 	glfwSetWindowRefreshCallback(m_window, Render);
+	glfwSetCharCallback(m_window, CharEvent);
 }
 
 void GLFWWindowSystem::KeyEvent(GLFWwindow *window, int key, int scancode, int action, int mode)
@@ -131,7 +130,7 @@ void GLFWWindowSystem::KeyEvent(GLFWwindow *window, int key, int scancode, int a
 		keymotion = KeyMotion::KeyDown;
 	else if (action == GLFW_RELEASE)
 		keymotion = KeyMotion::KeyUp;
-	m_glfwInstance->WindowSystem::KeyEvent(engineKey, keymotion);
+	m_glfwInstance->WindowSystem::KeyEvent(engineKey, keymotion);//父子之间同名函数无法发生重载
 }
 
 void GLFWWindowSystem::MouseEvent(GLFWwindow *window, int button, int action, int mode)
@@ -140,13 +139,13 @@ void GLFWWindowSystem::MouseEvent(GLFWwindow *window, int button, int action, in
 	glfwGetCursorPos(m_glfwInstance->m_window, &curX, &curY);
 	if (action == GLFW_PRESS)
 	{
-		m_instance->MouseEvent((int)curX, (int)curY, button==GLFW_MOUSE_BUTTON_LEFT ? MouseMotion::LeftButtonDown : MouseMotion::RightButtonDown);
+		m_glfwInstance->WindowSystem::MouseEvent((int)curX, (int)curY, button==GLFW_MOUSE_BUTTON_LEFT ? MouseMotion::LeftButtonDown : MouseMotion::RightButtonDown);
 		if (button == GLFW_MOUSE_BUTTON_RIGHT)
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 	else if (action == GLFW_RELEASE)
 	{
-		m_instance->MouseEvent((int)curX, (int)curY, button == GLFW_MOUSE_BUTTON_LEFT ? MouseMotion::LeftButtonUp : MouseMotion::RightButtonUp);
+		m_glfwInstance->WindowSystem::MouseEvent((int)curX, (int)curY, button == GLFW_MOUSE_BUTTON_LEFT ? MouseMotion::LeftButtonUp : MouseMotion::RightButtonUp);
 		if (button == GLFW_MOUSE_BUTTON_RIGHT)
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
@@ -154,12 +153,25 @@ void GLFWWindowSystem::MouseEvent(GLFWwindow *window, int button, int action, in
 
 void GLFWWindowSystem::MouseMoveEvent(GLFWwindow *window, double x, double y)
 {
-	m_instance->WindowSystem::MouseEvent((int)x, (int)y, MouseMotion::MouseMove);
+	m_glfwInstance->WindowSystem::MouseEvent((int)x, (int)y, MouseMotion::MouseMove);
+}
+
+void GLFWWindowSystem::CharEvent(GLFWwindow * window, unsigned int codepoint)
+{
+	//GLFW的字符输入事件
+	m_glfwInstance->WindowSystem::CharEvent(codepoint);
 }
 
 void GLFWWindowSystem::Render(GLFWwindow * window)
 {
-	m_instance->Render();
+	m_glfwInstance->Render();
+}
+
+GLFWWindowSystem * GLFWWindowSystem::GetInstance(int width, int height, string windowName)
+{
+	if (m_glfwInstance == nullptr)
+		m_glfwInstance = new GLFWWindowSystem(width, height, windowName);
+	return m_glfwInstance;
 }
 
 void GLFWWindowSystem::Start()
@@ -174,13 +186,12 @@ void GLFWWindowSystem::Start()
 
 void GLFWWindowSystem::Render()
 {
-	
-	if (m_engine)
+	if (m_engine && m_engine->GetGameState() == DragonEngine::GameState::Gaming)
 	{
 		m_engine->Move();
 		m_engine->Draw();
+		glfwSwapBuffers(m_window);
 	}
-	glfwSwapBuffers(m_window);
 }
 
 GLFWWindowSystem *GLFWWindowSystem::m_glfwInstance = nullptr;

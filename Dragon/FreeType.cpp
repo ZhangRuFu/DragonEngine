@@ -2,6 +2,9 @@
 #include "FreeType.h"
 #include "RenderSystem.h"
 #include "ResourceSystem.h"
+#include "Shader.h"
+#include <GLM\glm.hpp>
+#include <GLM\gtx\transform.hpp>
 
 using std::exception;
 
@@ -26,9 +29,11 @@ void FontRender::Init(void)
 
 	glBindVertexArray(fontVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
-	glBufferData(GL_ARRAY_BUFFER, 6 * 4 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 6 * 5 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -54,7 +59,7 @@ void FontRender::Init(void)
 	delete[] textures;
 }
 
-void FontRender::DrawText(const string &str, vec2 position, int fontSize, vec3 color)
+void FontRender::DrawText(const string &str, vec2 position, int fontSize, vec3 color, float depth)
 {
 	float scaleFactor = (float)fontSize / m_rawFontSize;
 	mat4 model;
@@ -81,13 +86,13 @@ void FontRender::DrawText(const string &str, vec2 position, int fontSize, vec3 c
 
 		int fontX = position.x + ch.m_bearingX;
 		int fontY = -position.y - ch.m_ascender + ch.m_bearingY;
-		float vertices[6][4]{
-			fontX, fontY , 0.0, 0.0,
-			fontX, fontY - ch.m_height, 0.0, 1.0,
-			fontX + ch.m_width, fontY - ch.m_height, 1.0, 1.0,
-			fontX, fontY, 0.0, 0.0,
-			fontX + ch.m_width, fontY - ch.m_height, 1.0, 1.0,
-			fontX + ch.m_width, fontY, 1.0, 0.0,
+		float vertices[6][5]{
+			fontX, fontY, depth, 0.0, 0.0,
+			fontX, fontY - ch.m_height, depth, 0.0, 1.0,
+			fontX + ch.m_width, fontY - ch.m_height, depth, 1.0, 1.0,
+			fontX, fontY, depth, 0.0, 0.0,
+			fontX + ch.m_width, fontY - ch.m_height, depth, 1.0, 1.0,
+			fontX + ch.m_width, fontY, depth, 1.0, 0.0,
 		};
 
 		glBindTexture(GL_TEXTURE_2D, ch.m_texID);
@@ -118,7 +123,7 @@ void FontRender::GetDimension(const string &str, int & width, int & height)
 
 void FontRender::PublicSet(void)
 {
-	mat4 windowProjection = ResourceSystem::GetMainCamera()->GenWindowProjectionMatrix();
+	mat4 windowProjection = ResourceSystem::GetMainCamera()->GenWindowProjectionMatrix(10.0f, -10.0f);
 	m_shader->SetUniformValue("projection", windowProjection);
 }
 

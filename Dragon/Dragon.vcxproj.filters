@@ -144,6 +144,15 @@
     <ClCompile Include="FreeType.cpp">
       <Filter>源文件\Render</Filter>
     </ClCompile>
+    <ClCompile Include="Activity.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UIModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MathUtility.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Entity.h">
@@ -241,6 +250,15 @@
     </ClInclude>
     <ClInclude Include="FreeType.h">
       <Filter>头文件\Render\Drawer</Filter>
+    </ClInclude>
+    <ClInclude Include="UIModel.h">
+      <Filter>头文件\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Activity.h">
+      <Filter>头文件\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="MathUtility.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

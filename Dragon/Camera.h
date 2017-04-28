@@ -26,7 +26,7 @@ private:
 	int m_windowHeight;
 
 public:
-	Camera(Transform transform = Transform(vec3(0, 0, 10)), vec3 front = vec3(0, 0, -1), vec3 up = vec3(0, 1, 0));
+	Camera(int windowWidth, int windowHeight, Transform transform = Transform(vec3(0, 0, 10)), vec3 front = vec3(0, 0, -1), vec3 up = vec3(0, 1, 0));
 
 private:
 	void GenDirection(void);
@@ -41,7 +41,8 @@ public:
 
 	mat4 GenViewMatrix();
 	mat4 GenProjectionMatrix();
-	mat4 GenWindowProjectionMatrix();
+	mat4 GenWindowProjectionMatrix(float nearZ = 0.0f, float farZ = 0.0f);
+
 
 public:
 

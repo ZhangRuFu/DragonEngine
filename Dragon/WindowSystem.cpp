@@ -1,12 +1,11 @@
 #include "WindowSystem.h"
 #include "InputSystem.h"
 #include "CommonType.h"
-#include "UI.h"
-#include "UIDrawer.h"
+#include "Activity.h"
 
 WindowSystem::WindowSystem(int width, int height, string windowName) : m_windowWidth(width), m_windowHeight(height), m_windowName(windowName)
 {
-	
+	m_engine = nullptr;
 }
 
 void WindowSystem::GetFrameSize(int & frameWidth, int & frameHeight)
@@ -15,24 +14,22 @@ void WindowSystem::GetFrameSize(int & frameWidth, int & frameHeight)
 	frameHeight = m_frameHeight;
 }
 
-void WindowSystem::AssignEngine(DragonEngine * engine)
-{
-	m_engine = engine;
-}
-
 void WindowSystem::AssignInput(InputSystem * input)
 {
 	m_input = input;
 }
 
-void WindowSystem::GetWindowSize(int &frameWidth, int &frameHeight)
+void WindowSystem::AssginEngine(DragonEngine * engine)
 {
-	m_instance->GetFrameSize(frameWidth, frameHeight);
+	m_engine = engine;
 }
 
-void WindowSystem::Render()
+void WindowSystem::AddActivity(Activity * activity)
 {
-	
+	UIModel::AddActivity(activity);
+	activity->OnCreate();
+	activity->OnMeasure(m_frameWidth, m_frameHeight);
+	activity->OnPosit(0, 0);
 }
 
 void WindowSystem::MouseEvent(int x, int y, MouseMotion mouseMotion)
@@ -53,35 +50,62 @@ void WindowSystem::MouseEvent(int x, int y, MouseMotion mouseMotion)
 	{
 		m_input->MouseKeyUp(buttonMap[mouseMotion]);
 	}
-	m_uiManager->DispatchEvent(mouseEvent);
+	GetActive()->AcceptEvent(ivec2(x, y), mouseMotion);
 }
 
+//按键事件-保存至InputSystem，供Entity使用
 void WindowSystem::KeyEvent(int key, KeyMotion keyMotion)
 {
 	if (keyMotion == KeyMotion::KeyDown)
 		m_input->KeyDown(key);
 	else if (keyMotion == KeyMotion::KeyUp)
 		m_input->KeyUp(key);
+	GetActive()->AcceptEvent(key, keyMotion);
 }
 
-void WindowSystem::InitUI(void)
+//字符消息-分发至Activity，供UI使用
+void WindowSystem::CharEvent(unsigned int codepoint)
 {
-	m_uiManager = new UIManager(m_frameWidth, m_frameHeight);
-	//Button *button = new Button("btnTest", vec2(50, 50), 80, 30, "Button");
-	Button *button2 = new Button("btnTest2", vec2(10, 500), "Self-Resize-Button");
-	ClipBar *clpBar = new ClipBar("clpTest", 100, vec2(50, 10));
-	//MouseListener *i = new iMouseListener();
-	//button->SetMouseListener(i);
-	//TextView *tv = new TextView("TexTest", vec2(50, 150), "Hello DragonEngine", 16);
-	//m_uiManager->AddView(*button);
-	m_uiManager->AddView(*button2);
-	m_uiManager->AddView(*clpBar);
-	//m_uiManager->AddView(*tv);
+	GetActive()->AcceptEvent(codepoint);
 }
 
-WindowSystem * WindowSystem::m_instance = nullptr;
-
-Event::Event(void) : m_mousePosition(0, 0), m_mouseMotion(MouseMotion::NoughtMouse), m_keyMotion(KeyMotion::NoughtKey), m_keyCode(0) 
+Event::Event(void) : m_mousePosition(0, 0)
 {
+	m_mouseMotion = MouseMotion::NoughtMouse;
+	m_keyMotion = KeyMotion::NoughtKey;
+	m_codePoint = 0;
+	m_keyCode = 0;
+	m_hasCharMsg = false;
+	m_hasKeyMsg = false;
+}
 
+Event::Event(int keyCode, KeyMotion keyMotion)
+{
+	m_hasKeyMsg = true;
+	m_keyCode = keyCode;
+	m_keyMotion = keyMotion;
+
+	m_hasCharMsg = false;
+	m_hasMouseMsg = false;
+	m_codePoint = 0;
+}
+
+Event::Event(unsigned int codePoint)
+{
+	m_hasCharMsg = true;
+	m_codePoint = codePoint;
+
+	m_hasKeyMsg = m_hasMouseMsg = false;
+	m_keyCode = 0;
+
+}
+
+Event::Event(glm::ivec2 mousePosition, MouseMotion mouseMotion)
+{
+	m_hasMouseMsg = true;
+	m_mousePosition = mousePosition;
+
+	m_hasCharMsg = m_hasKeyMsg = false;
+	m_codePoint = 0;
+	m_keyCode = 0;
 }
