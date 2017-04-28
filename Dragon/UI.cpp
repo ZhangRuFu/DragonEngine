@@ -278,6 +278,7 @@ ClipBar::ClipBar(Activity *activity, string id, float len, ivec2 position, int w
 	sprintf(tex, "Length: %.1f", len);
 	m_lenText = new TextView(m_activity, "", ivec2(0, 0), tex);
 	m_lenText->SetParentView(this);
+	m_editClipName = new EditText(m_activity, "", ivec2(0, 0), "ClipName_01");
 	sprintf(tex, "Start: %.1f", m_start);
 	m_startText = new TextView(m_activity, "", ivec2(0, 0), tex);
 	m_startText->SetParentView(this);
@@ -326,6 +327,7 @@ void ClipBar::OnDraw(Tiny2D * paint)
 	m_lenText->OnDraw(paint);
 	m_startButton->OnDraw(paint);
 	m_endButton->OnDraw(paint);
+	m_editClipName->OnDraw(paint);
 }
 
 void ClipBar::OnMeasure(int fatherWidth, int fatherHeight)
@@ -336,6 +338,7 @@ void ClipBar::OnMeasure(int fatherWidth, int fatherHeight)
 	m_endText->OnMeasure(m_width, m_height);
 	m_startButton->OnMeasure(m_width, m_height);
 	m_endButton->OnMeasure(m_width, m_height);
+	m_editClipName->OnMeasure(m_width, m_height);
 }
 
 void ClipBar::OnPosit(int fatherWidth, int fatherHeight)
@@ -345,8 +348,11 @@ void ClipBar::OnPosit(int fatherWidth, int fatherHeight)
 	m_lenText->OnPosit(aP.x, aP.y);
 	m_lenText->SetPosition(ivec2(ClipBarMeasure::m_leftOffset, ClipBarMeasure::m_lenToTop));
 
+	m_editClipName->OnPosit(aP.x, aP.y);
+	m_editClipName->SetPosition(ivec2(ClipBarMeasure::m_leftOffset, m_lenText->GetPositionY() + m_lenText->GetHeight() + ClipBarMeasure::m_interval));
+
 	m_startText->OnPosit(aP.x, aP.y);
-	m_startText->SetPosition(ivec2(ClipBarMeasure::m_leftOffset, m_lenText->GetPositionY() + m_lenText->GetHeight() + ClipBarMeasure::m_startToLenDistence));
+	m_startText->SetPosition(ivec2(ClipBarMeasure::m_leftOffset, m_editClipName->GetPositionY() + m_editClipName->GetHeight() + ClipBarMeasure::m_interval));
 	
 	m_endText->OnPosit(aP.x, aP.y);
 	m_endText->SetPosition(ivec2(m_width - m_endText->GetWidth() - ClipBarMeasure::m_rightOffset, m_startText->GetPositionY()));
@@ -360,7 +366,7 @@ void ClipBar::OnPosit(int fatherWidth, int fatherHeight)
 	m_endButton->SetPosition(ivec2(ClipBarMeasure::m_leftOffset + ClipBarMeasure::m_axisLen - ClipBarMeasure::m_slideLen / 2.0, m_startButton->GetPositionY()));
 	m_maxPositionX = m_endButton->GetPositionX();
 	m_endButton->AddPosition(ClipBarMeasure::m_axisLen - m_end * (ClipBarMeasure::m_axisLen / m_length), 0.0);
-	
+
 	m_axisPosition.x = ClipBarMeasure::m_leftOffset;
 	m_axisPosition.y = m_startText->GetPositionY() + m_startText->GetHeight() + ClipBarMeasure::m_axisToStart;
 }
@@ -375,6 +381,9 @@ bool ClipBar::DispatchEvent(Event & ievent)
 		return true;
 
 	if (m_endButton->DispatchEvent(ievent))
+		return true;
+
+	if (m_editClipName->DispatchEvent(ievent))
 		return true;
 
 	static bool isDown = false;
@@ -552,16 +561,20 @@ bool EditText::DispatchEvent(Event & ievent)
 	if (ievent.m_hasCharMsg)
 	{
 		//有字符事件
-		char c[2];
-		c[0] = ievent.m_codePoint;
-		c[1] = '\0';
-		SetText(m_text.append(c));
+		SetText(m_text.append(1, ievent.m_codePoint));
 		return true;
 	}
-	else if (ievent.m_hasKeyMsg)
+	else if (ievent.m_hasKeyMsg && ievent.m_keyMotion == KeyMotion::KeyDown)
 	{
-		//处理退格事件
-		cout << ievent.m_keyCode << endl;
+		//退格
+		if (ievent.m_keyCode == KEY_BACK)
+		{
+			string str = GetText();
+			if (str.size() == 0)
+				return true;
+			str.erase(--str.end());
+			SetText(str);
+		}
 	}
 
 	if (!View::DispatchEvent(ievent))

@@ -55,7 +55,8 @@ public:
 		{
 			float start = m_clip->GetStartValue();
 			float end = m_clip->GetEndValue();
-			ClipItem *item = new ClipItem(view.GetActivity(), "T", start, end);
+			string clipName = m_clip->GetClipName();
+			ClipItem *item = new ClipItem(view.GetActivity(), clipName, start, end);
 			m_lstView->AddItem(item);
 		}
 		return true;

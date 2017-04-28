@@ -165,7 +165,7 @@ public:
 	string GetText(void) const { return m_text; }
 	void SetText(string text) { m_text = text; SetMeasureInvalidate(); Invalidate(this); }
 	vec3 GetFontColor(void) const { return m_fontColor; }
-	void SetFontColor(vec3 color) { m_fontColor = color; }
+	void SetFontColor(vec3 color) { m_fontColor = color; }                      
 	int GetFontSize(void) const { return m_fontSize; }
 	void SetFontSize(int fontSize) { m_fontSize = fontSize; SetMeasureInvalidate(); Invalidate(this); }
 	TextAligin GetTextAlign(void) { return m_texAlign; }
@@ -231,7 +231,7 @@ public:
 	static const int m_lenToTop = 20;
 	static const int m_leftOffset = 20;
 	static const int m_rightOffset = 20;
-	static const int m_startToLenDistence = 10;
+	static const int m_interval = 10;
 	static const int m_axisToStart = 20;
 	static const int m_axisLen = 210;
 	static const int m_slideLen = 10;
@@ -241,7 +241,7 @@ public:
 class ClipBar : public View
 {
 public:
-	ClipBar(Activity *activity, string id, float len, ivec2 position, int width = 250, int height = 120);		//构造函数
+	ClipBar(Activity *activity, string id, float len, ivec2 position, int width = 250, int height = 170);		//构造函数
 	float GetStartValue(void) { return m_start; }
 	float GetEndValue(void) { return m_end; }
 	void SetStartValue(float value);
@@ -249,6 +249,7 @@ public:
 	void AddEndValue(float delta) { SetEndValue(m_end + delta); }
 	void SetEndValue(float value);
 	float GetLength(void) { return m_length; }
+	string GetClipName(void) { return m_editClipName->GetText(); }
 	int GetSlideMinX(void) { return m_minPositionX; }
 	int GetSlideMaxX(void) { return m_maxPositionX; }
 
@@ -264,6 +265,7 @@ private:
 	float m_end;
 	ivec2 m_axisPosition;
 
+	EditText *m_editClipName;
 	TextView *m_startText;
 	TextView *m_endText;
 	TextView *m_lenText;
