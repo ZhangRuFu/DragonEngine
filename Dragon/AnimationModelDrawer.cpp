@@ -5,6 +5,7 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "ResourceSystem.h"
+#include "Model.h"
 
 void AnimationModelDrawer::PublicSet()
 {
@@ -82,6 +83,14 @@ GraphicsBuffer * AnimationModelDrawer::LoadGraphicsBuffer(SkeletonModel * model)
 	return buffer;
 }
 
+AnimationModelDrawer::AnimationModelDrawer(Model * model, Transform * transform, string shaderName) : Drawer(shaderName)
+{
+	m_model = dynamic_cast<SkeletonModel*>(model);
+	m_transform = transform;
+	m_buffers = LoadGraphicsBuffer(m_model);
+	m_boneTransform = nullptr;
+}
+
 void AnimationModelDrawer::Draw()
 {
 	//Model¾ØÕó
@@ -94,7 +103,7 @@ void AnimationModelDrawer::Draw()
 	GLenum modelLocation = m_shader->GetUniformLocation("model");
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, value_ptr(model));
 
-	m_shader->SetUniformValue("bones", m_model->GetBoneTransform());
+	m_shader->SetUniformValue("bones", *m_boneTransform);
 
 	int subMeshCount = m_model->GetMeshCount();
 	const SkeletonMesh *mesh = m_model->GetMesh(0);

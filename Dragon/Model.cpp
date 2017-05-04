@@ -2,13 +2,11 @@
 #include "MeshManager.h"
 #include "TextureManager.h"
 #include "Time.h"
+#include <stack>
+
+using std::stack;
 
 StaticModel::StaticModel(vector<StaticMesh*> subMeshes, vector<Texture*> textures) : m_subMeshes(subMeshes), m_texutres(textures) {}
-
-void StaticModel::Move()
-{
-
-}
 
 int StaticModel::GetSubMeshCount()
 {
@@ -36,35 +34,55 @@ void StaticModel::AddTexture(string texturePath)
 //==================================================SkeletonMesh================================================
 SkeletonModel::SkeletonModel(void)
 {
-	m_spf = 1.0 / 30 * 1000;		//ms
-	m_curTime = 0;
-	m_rootBone = nullptr;
-	m_curKey = m_keyCount = 0;
+	m_boneManager = nullptr;
 }
 
-void SkeletonModel::Move(void)
+BoneManager::BoneManager(Bone * rootBone)
 {
-	m_curTime += Time::GetDeltaTime();
-	//=================================为了画面流畅，应该帧数保留小数=================================
-	if (m_curTime < m_spf)
-		return;
-	m_curTime = 0;
-	m_curKey++;
-	m_curKey %= m_keyCount;
-	SkeletonUpdate(m_rootBone, mat4());
+	m_rootBone = rootBone;
+	//遍历骨骼，建立映射关系
+	stack<Bone*> boneStack;
+
+	//利用栈进行非递归的树遍历
+	boneStack.push(m_rootBone);
+	while (!boneStack.empty())
+	{
+		Bone *curBone = boneStack.top();
+		boneStack.pop();
+		BoneIndex *boneIndex = new BoneIndex();
+		boneIndex->bone = curBone;
+		boneIndex->index = m_bonesMap.size();
+		m_bonesMap[curBone->m_name] = *boneIndex;
+		for (int i = 0; i < curBone->m_childCount; i++)
+			boneStack.push(curBone->m_child + i);
+	}
 }
 
-void SkeletonModel::SkeletonUpdate(Bone * node, mat4 & parentTransform)
+const BoneIndex* BoneManager::GetBoneIndex(string boneName)
 {
-	string boneName = node->m_name;
-	mat4 transform;
+	if (m_bonesMap.find(boneName) != m_bonesMap.end())
+		return &m_bonesMap[boneName];
+	return nullptr;
+}
+
+void BoneManager::UpdateSkeleton(float key, vector<mat4> &transform)
+{
+	transform.resize(m_bonesMap.size());
+	UpdateSkeleton(m_rootBone, mat4(), key, transform);
+}
+
+void BoneManager::UpdateSkeleton(Bone *bone, mat4 &parentTransform, float key, vector<mat4> &transform)
+{
+	string boneName = bone->m_name;
+	mat4 localBoneTrans;
 	if (m_bonesMap.find(boneName) != m_bonesMap.end())
 	{
 		const BoneIndex &boneIndex = m_bonesMap[boneName];
 		BoneAnimation &boneAnimation = *boneIndex.bone->m_animation;
-		transform = boneAnimation.GetTransform(m_curKey);
-		m_boneTransform[boneIndex.index] = parentTransform * transform * boneIndex.bone->m_offsetMatrix;
+		localBoneTrans = boneAnimation.GetTransform(key);
+		transform[boneIndex.index] = parentTransform * localBoneTrans * boneIndex.bone->m_offsetMatrix;
 	}
-	for (int i = 0; i < node->m_childCount; i++)
-		SkeletonUpdate(node->m_child + i, parentTransform * transform);
+	for (int i = 0; i < bone->m_childCount; i++)
+		UpdateSkeleton(bone->m_child + i, parentTransform * localBoneTrans, key, transform);
 }
+

@@ -55,8 +55,7 @@ Model * FBXModelLoader::LoadModel()
 
 	m_scene->Destroy(true);
 	m_scene = nullptr;
-	//初始化
-	m_model->m_boneTransform.resize(m_model->m_bonesMap.size());
+	
 	fbxManager->Destroy();
 	return m_model;
 }
@@ -283,14 +282,14 @@ void FBXModelLoader::GetVertexWeight(FbxGeometry* pGeometry, VertexWeight *verte
 		{
 			cluster = ((FbxSkin *)pGeometry->GetDeformer(i, FbxDeformer::eSkin))->GetCluster(j);
 
-			const BoneIndex &boneIndex = m_model->m_bonesMap[cluster->GetLink()->GetName()];
+			const BoneIndex *boneIndex = m_model->m_boneManager->GetBoneIndex(cluster->GetLink()->GetName());
 
 			int ctlPointCount = cluster->GetControlPointIndicesCount();
 			int* ctlPointIndex = cluster->GetControlPointIndices();
 			double* weights = cluster->GetControlPointWeights();
 
 			for (int k = 0; k < ctlPointCount; k++)
-				vertexBoneInfo[ctlPointIndex[k]].AddVertexBoneInfo(boneIndex.index, (float)weights[k]);
+				vertexBoneInfo[ctlPointIndex[k]].AddVertexBoneInfo(boneIndex->index, (float)weights[k]);
 
 			FbxAMatrix transformMatrix;
 			FbxAMatrix transformLinkMatrix;				//骨骼空间->世界空间
@@ -301,7 +300,7 @@ void FBXModelLoader::GetVertexWeight(FbxGeometry* pGeometry, VertexWeight *verte
 			globalBindposeInverseMatrix = transformLinkMatrix.Inverse() * transformMatrix * geometryTransform;
 
 			//获得偏移矩阵
-			FbxMatrixToGLM(globalBindposeInverseMatrix, boneIndex.bone->m_offsetMatrix);
+			FbxMatrixToGLM(globalBindposeInverseMatrix, boneIndex->bone->m_offsetMatrix);
 		}
 	}
 }
@@ -326,14 +325,8 @@ void FBXModelLoader::LoadBone(void)
 				FbxNodeAttribute *attrib = SkeletonNode->GetNodeAttribute();
 				if (attrib && attrib->GetAttributeType() == FbxNodeAttribute::EType::eSkeleton)
 				{
-					rootBone = new Bone();
 					rootBoneNode = node;
-					rootBone->m_name = node->GetName();
-					rootBone->m_childCount = node->GetChildCount();
-					rootBone->m_child = new Bone[rootBone->m_childCount];
-					m_model->m_bonesMap[rootBone->m_name].index = m_model->m_bonesMap.size();
-					m_model->m_bonesMap[rootBone->m_name].bone = rootBone;
-
+					rootBone = new Bone();
 					goto finded;
 				}
 			}
@@ -342,22 +335,19 @@ void FBXModelLoader::LoadBone(void)
 finded:
 	if (rootBone == nullptr)
 		throw FBXMeshLoaderException("未找到根骨骼节点");
-	m_model->m_rootBone = rootBone;
+
+	//找到根骨骼
 	LoadBone(rootBoneNode, rootBone);
+	//骨骼加载完毕
+	m_model->m_boneManager = new BoneManager(rootBone);
 }
 
 void FBXModelLoader::LoadBone(FbxNode * node, Bone *bone)
 {
 	string nodeName = node->GetName();
-	if (m_model->m_bonesMap.find(nodeName) == m_model->m_bonesMap.end())
-	{
-		//该骨骼不在映射表中，需添加
-		bone->m_name = nodeName;
-		bone->m_childCount = node->GetChildCount();
-		bone->m_child = new Bone[bone->m_childCount];
-		m_model->m_bonesMap[bone->m_name].index = m_model->m_bonesMap.size();
-		m_model->m_bonesMap[bone->m_name].bone = bone;
-	}
+	bone->m_name = nodeName;
+	bone->m_childCount = node->GetChildCount();
+	bone->m_child = new Bone[bone->m_childCount];
 
 	for (int i = 0; i < node->GetChildCount(); i++)
 		LoadBone(node->GetChild(i), bone->m_child + i);
@@ -385,7 +375,7 @@ void FBXModelLoader::LoadAnimationLayerInfo(FbxAnimLayer* pAnimLayer, FbxNode* p
 {
 	string boneName = pNode->GetName();
 
-	if (m_model->m_bonesMap.find(boneName) != m_model->m_bonesMap.end())
+	if (m_model->m_boneManager->GetBoneIndex(boneName) != nullptr)
 		LoadChannels(pNode, pAnimLayer);
 
 	for (int i = 0; i < pNode->GetChildCount(); i++)
@@ -394,14 +384,14 @@ void FBXModelLoader::LoadAnimationLayerInfo(FbxAnimLayer* pAnimLayer, FbxNode* p
 
 void FBXModelLoader::LoadChannels(FbxNode* node, FbxAnimLayer* animationLayer)
 {
-	Bone *bone = m_model->m_bonesMap[node->GetName()].bone;
+	Bone *bone = m_model->m_boneManager->GetBoneIndex(node->GetName())->bone;
 	bone->m_animation = new BoneAnimation();
 	BoneAnimation &boneAnimation = *bone->m_animation;
 
 	LoadTranslate(node, animationLayer, boneAnimation);
 	LoadRotate(node, animationLayer, boneAnimation);
 	LoadScale(node, animationLayer, boneAnimation);
-	if (bone == m_model->m_rootBone)
+	if (m_model->m_boneManager->isRootBone(bone))
 	{
 		//根骨骼需要加载额外的信息以纠正整个模型的位置
 		vec3 *prePost = new vec3[2];
@@ -567,23 +557,6 @@ vector<Key>* FBXModelLoader::LoadCurveKeys(FbxAnimCurve* pCurve)
 		values->push_back(Key(frame, value));
 	}
 	return values;
-}
-
-
-
-void FBXModelLoader::SkeletonUpdate(Bone *node, mat4 &parentTransform)
-{
-	string boneName = node->m_name;
-	mat4 transform;
-	if (m_model->m_bonesMap.find(boneName) != m_model->m_bonesMap.end())
-	{
-		const BoneIndex &boneIndex = m_model->m_bonesMap[boneName];
-		BoneAnimation &boneAnimation = *boneIndex.bone->m_animation;
-		transform = boneAnimation.GetTransform(m_model->m_curKey);
-		m_model->m_boneTransform[boneIndex.index] = parentTransform * transform * boneIndex.bone->m_offsetMatrix;
-	}
-	for (int i = 0; i < node->m_childCount; i++)
-		SkeletonUpdate(node->m_child + i, parentTransform * transform);
 }
 
 void FBXModelLoader::FbxMatrixToGLM(FbxAMatrix & fbxMatrix, mat4 & glmMatrix)

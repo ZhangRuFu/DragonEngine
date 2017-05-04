@@ -26,8 +26,6 @@ using glm::mat4;
 class Model
 {
 public:
-	virtual void Move() = 0;
-
 	virtual bool hasAnimation() = 0;
 
 	virtual void AddTexture(string texturePath) = 0;
@@ -49,8 +47,6 @@ private:
 
 public:
 	StaticModel(vector<StaticMesh*> subMeshes, vector<Texture*> textures);
-
-	virtual void Move();
 
 	virtual bool hasAnimation() { return false; }
 
@@ -150,6 +146,7 @@ public:
 	vec3 GetKeyValue(int key, vector<Key>* Keyvector[3]);
 };
 
+//骨骼信息
 struct Bone
 {
 	string m_name;
@@ -161,12 +158,31 @@ struct Bone
 	Bone(void) : m_child(nullptr), m_animation(nullptr) {}
 };
 
-
+//由骨骼名获得骨骼、骨骼数组索引
 struct BoneIndex
 {
 	Bone *bone;
 	int index;
 };
+
+
+
+class BoneManager
+{
+public:
+	BoneManager(Bone *rootBone);
+	const BoneIndex* GetBoneIndex(string boneName);
+	void UpdateSkeleton(float key, vector<mat4> &transform);
+	void UpdateSkeleton(Bone *bone, mat4 &parentTransform, float key, vector<mat4> &transform);
+	bool isRootBone(Bone *bone) { return bone == m_rootBone; }
+	int GetBoneCount(void) { return m_bonesMap.size(); }
+
+private:
+	Bone *m_rootBone;
+	map<string, BoneIndex> m_bonesMap;		//骨骼名-索引映射表
+};
+
+
 
 class SkeletonModel : public Model
 {
@@ -174,14 +190,10 @@ class SkeletonModel : public Model
 private:
 	vector<SkeletonMesh> m_meshes;			//SkeletonSubMesh
 	vector<Texture*> m_texutres;			//Texture
-	Bone *m_rootBone;						//骨骼信息
-	map<string, BoneIndex> m_bonesMap;		//骨骼名-索引映射表
-	vector<mat4> m_boneTransform;			//最终Transform矩阵
 	
-	float m_spf;							//每帧所需时间
-	float m_curTime;						//当前帧积累时间
+	BoneManager *m_boneManager;				//Bone
+	
 	int m_keyCount;							//动画帧总数
-	int m_curKey;							//当前帧
 
 public:
 	class SkeletonModelException
@@ -196,18 +208,11 @@ public:
 public:
 	SkeletonModel(void);
 
-	virtual void Move(void);
-
 	virtual bool hasAnimation(void) { return true; }
-	
 	virtual void AddTexture(string texturePath) {};
 
 	int GetMeshCount() { return m_meshes.size(); };
-
+	int GetAnimationKeyCount() { return m_keyCount; }
+	BoneManager* GetBoneManager() { return m_boneManager; }
 	const SkeletonMesh* GetMesh(int index) { return &m_meshes[index]; };
-
-	const vector<mat4>& GetBoneTransform(void) { return m_boneTransform; }
-
-private:
-	void SkeletonUpdate(Bone *node, mat4 &parentTransform);
 };

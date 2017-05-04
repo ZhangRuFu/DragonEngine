@@ -20,9 +20,8 @@ private:
 public:
 	FBXModelLoader(string path);
 
-public:
-
-	Model* LoadModel();
+	//Override
+	virtual Model* LoadModel();
 
 
 public:
@@ -63,8 +62,6 @@ private:
 	void LoadScale(FbxNode *node, FbxAnimLayer* animLayer, BoneAnimation &bone);
 	FbxAMatrix GetGeometryTransformation(FbxNode* inNode);
 	vector<Key>*  LoadCurveKeys(FbxAnimCurve* pCurve);
-
-	void SkeletonUpdate(Bone *node, mat4 &parentTransform);
 
 public:
 	//×ª»»¹¤¾ß

@@ -16,6 +16,7 @@
 using std::list;
 
 class DragonEngine;
+class AnimationController;
 
 class ResourceSystem
 {
@@ -27,6 +28,7 @@ private:
 	list<GameSpirit*> m_spiritList;
 	list<Camera*> m_cameraList;
 	list<Light*> m_lightList;
+	list<AnimationController*> m_animationControllers;
 	MeshManager *m_meshManager;
 	TextureManager *m_textureManager;
 	DragonEngine *m_engine;
@@ -40,6 +42,7 @@ public:
 	static void Register(GameSpirit *spirit);
 	static void Register(Camera *camera);
 	static void Register(Light *light);
+	static void Register(AnimationController *animationController);
 	static Camera* GetMainCamera();
 	static Light* GetLight();
 

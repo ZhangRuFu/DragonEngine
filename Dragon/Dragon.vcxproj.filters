@@ -55,6 +55,12 @@
     <Filter Include="源文件\UI">
       <UniqueIdentifier>{9e31fb6c-981d-4fc5-a825-a679c6887e88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Animation">
+      <UniqueIdentifier>{aed64f57-cc2a-4351-bdb9-e583aca2d174}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Animation">
+      <UniqueIdentifier>{020571be-58d3-4bbe-b640-07c50b75f861}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Entity.cpp">
@@ -152,6 +158,12 @@
     </ClCompile>
     <ClCompile Include="MathUtility.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationClipManager.cpp">
+      <Filter>源文件\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationController.cpp">
+      <Filter>源文件\Animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -259,6 +271,12 @@
     </ClInclude>
     <ClInclude Include="MathUtility.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationClipManager.h">
+      <Filter>头文件\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationController.h">
+      <Filter>头文件\Animation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

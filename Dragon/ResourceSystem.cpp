@@ -1,5 +1,6 @@
 #include "ResourceSystem.h"
 #include "DragonEngine.h"
+#include "AnimationController.h"
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -42,12 +43,19 @@ void ResourceSystem::Register(Light * light)
 		m_instance->m_lightList.push_back(light);
 }
 
+void ResourceSystem::Register(AnimationController * animationController)
+{
+	if (animationController != nullptr)
+		m_instance->m_animationControllers.push_back(animationController);
+}
+
 void ResourceSystem::Move()
 {
+	for (list<AnimationController*>::iterator i = m_animationControllers.begin(); i != m_animationControllers.end(); i++)
+		(*i)->Move();
+
 	for (list<GameSpirit*>::iterator i = m_spiritList.begin(); i != m_spiritList.end(); i++)
 		(*i)->Move();
-	m_meshManager->Move();
-
 }
 
 Camera * ResourceSystem::GetMainCamera()

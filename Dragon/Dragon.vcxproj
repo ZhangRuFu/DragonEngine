@@ -148,6 +148,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Activity.cpp" />
+    <ClCompile Include="AnimationClipManager.cpp" />
+    <ClCompile Include="AnimationController.cpp" />
     <ClCompile Include="AnimationModelDrawer.cpp" />
     <ClCompile Include="AssimpMeshLoader.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -182,6 +184,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Activity.h" />
+    <ClInclude Include="AnimationClipManager.h" />
+    <ClInclude Include="AnimationController.h" />
     <ClInclude Include="AnimationModelDrawer.h" />
     <ClInclude Include="AssimpMeshLoader.h" />
     <ClInclude Include="Camera.h" />

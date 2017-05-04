@@ -66,7 +66,7 @@ struct GraphicsBuffer
 #define KEY_DOWN			40	//Down Arrow
 #define KEY_SELECT			41	//Select
 #define KEY_PRINT			42	//Print
-#define KEY_EXECUTE			43	//Execute
+#define KEY_EXECUTES		43	//Execute
 #define KEY_SNAPSHOT		44	//Snapshot
 #define KEY_INSERT			45	//Insert
 #define KEY_DELETE			46	//Delete

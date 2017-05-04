@@ -9,22 +9,21 @@
 #include <vector>
 #include <string>
 #include <map>
-#include "Model.h"
 #include "CommonType.h"
 
 using std::string;
 using std::vector;
 using std::map;
 
+class Model;
+
 class MeshManager
 {
 private:
 	static MeshManager *m_instance;
 
-private:
 	vector<Model*> m_meshes;							//注册所有游戏中的Model（资源唯一)
 	vector<Model*> m_basicMeshes;						//创建的基本几何体
-	vector<Model*> m_animationMesh;						//具有动画的网格，需要进行Move
 	map<string, int> m_meshMap;							//Model路径-索引 映射表
 
 public:
@@ -35,7 +34,6 @@ public:
 	static Model* LoadModel(BasicMesh basicMesh);
 	static MeshManager* GetInstance(void);
 
-	void Move(void);
 private:
 	MeshManager(void);
 	void CreateBasicMesh(void);

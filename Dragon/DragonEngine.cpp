@@ -36,6 +36,7 @@ void DragonEngine::Move()
 	unsigned int timeSpan = currentTime - lastTime;
 	m_time->Elapse(timeSpan);
 	lastTime = currentTime;
+
 	if(m_gameState == GameState::Gaming)
 		m_resourceSystem->Move();
 }
@@ -61,8 +62,8 @@ void DragonEngine::Init()
 	int frameWidth, frameHeight;
 	m_windowSystem->GetFrameSize(frameWidth, frameHeight);
 	Camera *m_camera = new Camera(frameWidth, frameHeight);
-	Soldier *soldier = new Soldier();
-	//Monster *monster = new Monster();
+	//Soldier *soldier = new Soldier();
+	Monster *monster = new Monster();
 	WoodPlane *woodPlane = new WoodPlane();
 	Light *light = new Light(Transform(vec3(20, 20, 20)));
 	

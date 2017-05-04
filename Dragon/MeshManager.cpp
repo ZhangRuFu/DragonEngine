@@ -1,5 +1,6 @@
 #include "MeshManager.h"
 #include "MeshLoaderFactory.h"
+#include "Model.h"
 
 MeshManager::MeshManager(void)
 {
@@ -20,8 +21,6 @@ Model * MeshManager::_LoadModel(string meshPath)
 	delete meshLoader;
 	m_meshMap[meshPath] = m_meshes.size();
 	m_meshes.push_back(model);
-	if (model->hasAnimation())
-		m_animationMesh.push_back(model);
 	return model;
 }
 
@@ -46,12 +45,6 @@ MeshManager * MeshManager::GetInstance(void)
 	if (m_instance == nullptr)
 		m_instance = new MeshManager();
 	return m_instance;
-}
-
-void MeshManager::Move(void)
-{
-	for (vector<Model*>::const_iterator i = m_animationMesh.begin(); i != m_animationMesh.end(); i++)
-		(*i)->Move();
 }
 
 void MeshManager::CreateBasicMesh(void)
