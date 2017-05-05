@@ -13,12 +13,15 @@ AnimationController::AnimationController(AnimationModelDrawer * drawer, Skeleton
 	m_drawer->UpdateBoneTransform(&m_boneTransform);
 	m_curKey = 0;
 	m_keyCount = model->GetAnimationKeyCount();
+	m_isPlay = false;
 	ResourceSystem::Register(this);
 }
 
 void AnimationController::Move(void)
 {
 	//每帧，计算骨骼Transform，交给Drawer
+	if (!m_isPlay)
+		return;
 	m_curTime += Time::GetDeltaTime();
 	if (m_curTime < m_spf)
 		return;

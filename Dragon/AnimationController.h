@@ -17,8 +17,11 @@ class AnimationController
 	float m_curTime;						//当前帧积累时间
 	int m_keyCount;							//动画帧总数
 	float m_curKey;							//当前帧
+	bool m_isPlay;							//是否播放
 
 public:
 	AnimationController(AnimationModelDrawer *drawer, SkeletonModel *model);
+	void Pause(void) { m_isPlay = false; }
+	void Play(void) { m_isPlay = true; }
 	void Move(void);
 };
